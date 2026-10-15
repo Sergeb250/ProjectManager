@@ -486,11 +486,7 @@ public class ConsoleMenu {
             if (taskId == null) {
                 return null;
             }
-            Task task = taskService.findById(taskId);
-            if (task == null) {
-                throw new TaskNotFoundException("Task '" + taskId + "' was not found in the project.");
-            }
-            return task;
+            return taskService.findRequired(taskId);
         } catch (TaskNotFoundException ex) {
             printError(ex);
             System.out.println("Operation aborted. Returning to task menu...");
