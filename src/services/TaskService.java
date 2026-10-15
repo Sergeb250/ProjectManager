@@ -3,6 +3,7 @@ package services;
 import models.Project;
 import models.Task;
 import models.TaskStatus;
+import utils.exceptions.TaskNotFoundException;
 
 public class TaskService {
 
@@ -94,6 +95,14 @@ public class TaskService {
             }
         }
         return null;
+    }
+
+    public Task findRequired(String taskId) throws TaskNotFoundException {
+        Task task = findById(taskId);
+        if (task == null) {
+            throw new TaskNotFoundException("Task '" + taskId + "' was not found in the project.");
+        }
+        return task;
     }
 
     public Task addTask(Project project, String name, String assignedTo, TaskStatus status, int hours) {
