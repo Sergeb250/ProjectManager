@@ -43,18 +43,26 @@ public abstract class Project implements Completable {
     }
 
     public void displayProject(boolean includeTasks) {
+        printDetails();
+        if (includeTasks) {
+            System.out.println();
+            System.out.println("Associated Tasks:");
+            printTaskTable();
+        }
+        printCompletion();
+    }
+
+    private void printDetails() {
         System.out.println("Project Name: " + name);
         System.out.println("Type: " + getType());
         System.out.println("Team Size: " + teamSize);
         System.out.println("Budget: " + formatMoney(budget));
         System.out.println("Description: " + description);
         System.out.println(getProjectDetails());
-        if (includeTasks) {
-            System.out.println();
-            System.out.println("Associated Tasks:");
-            printTaskTable();
-        }
-        System.out.printf(Locale.US, "Completion Rate: %.2f%%%n", getCompletionPercentage());
+    }
+
+    private void printCompletion() {
+        System.out.printf(Locale.US, "Completion Rate: %.2f%%%n", calculateCompletionPercentage());
     }
 
     public void displayCatalogRow() {
@@ -85,7 +93,7 @@ public abstract class Project implements Completable {
         return taskCount > 0 && countByStatus(TaskStatus.COMPLETED) == taskCount;
     }
 
-    public double getCompletionPercentage() {
+    public double calculateCompletionPercentage() {
         if (taskCount == 0) {
             return 0.0;
         }
@@ -110,9 +118,13 @@ public abstract class Project implements Completable {
         return taskCount >= MAX_TASKS;
     }
 
-    public void addTask(Task task) {
+    public boolean addTask(Task task) {
+        if (isTaskListFull()) {
+            return false;
+        }
         tasks[taskCount] = task;
         taskCount++;
+        return true;
     }
 
     public boolean hasTaskName(String name) {
@@ -133,6 +145,13 @@ public abstract class Project implements Completable {
         return null;
     }
 
+    public Task getTaskAt(int index) {
+        if (index < 0 || index >= taskCount) {
+            throw new IllegalArgumentException("Task index is out of range.");
+        }
+        return tasks[index];
+    }
+
     public Task removeTaskById(String taskId) {
         for (int i = 0; i < taskCount; i++) {
             if (tasks[i].getId().equalsIgnoreCase(taskId)) {
@@ -146,20 +165,6 @@ public abstract class Project implements Completable {
             }
         }
         return null;
-    }
-
-    private String formatMoney(double amount) {
-        if (amount == Math.rint(amount)) {
-            return String.format(Locale.US, "$%,.0f", amount);
-        }
-        return String.format(Locale.US, "$%,.2f", amount);
-    }
-
-    private String fit(String value, int width) {
-        if (value.length() <= width) {
-            return value;
-        }
-        return value.substring(0, width);
     }
 
     public String getId() {
@@ -192,5 +197,19 @@ public abstract class Project implements Completable {
 
     public int getTaskCount() {
         return taskCount;
+    }
+
+    private String formatMoney(double amount) {
+        if (amount == Math.rint(amount)) {
+            return String.format(Locale.US, "$%,.0f", amount);
+        }
+        return String.format(Locale.US, "$%,.2f", amount);
+    }
+
+    private String fit(String value, int width) {
+        if (value.length() <= width) {
+            return value;
+        }
+        return value.substring(0, width);
     }
 }

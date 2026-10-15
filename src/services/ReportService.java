@@ -27,11 +27,7 @@ public class ReportService {
             percentages[i] = report.getCompletionPercent();
         }
 
-        double sum = 0;
-        for (int i = 0; i < percentages.length; i++) {
-            sum += percentages[i];
-        }
-        double average = sum / count;
+        double average = averageOf(percentages);
 
         System.out.println("──────────────────────────────────────────────────────────────────────────────────────────────");
         System.out.printf(Locale.US, "AVERAGE COMPLETION: %.2f%%%n", average);
@@ -41,5 +37,25 @@ public class ReportService {
     public void printReport(Project project) {
         StatusReport report = new StatusReport(project);
         report.print();
+    }
+
+    public double calculateAverageCompletion(ProjectService projectService) {
+        int count = projectService.getCount();
+        if (count == 0) {
+            return 0.0;
+        }
+        double[] percentages = new double[count];
+        for (int i = 0; i < count; i++) {
+            percentages[i] = projectService.getAt(i).calculateCompletionPercentage();
+        }
+        return averageOf(percentages);
+    }
+
+    private double averageOf(double[] percentages) {
+        double sum = 0;
+        for (int i = 0; i < percentages.length; i++) {
+            sum += percentages[i];
+        }
+        return sum / percentages.length;
     }
 }

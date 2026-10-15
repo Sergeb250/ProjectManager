@@ -121,7 +121,7 @@ The catalog stores both kinds in one `Project[]`. When it prints a project, Java
 
 `Task` implements `Completable`. The completion count calls `isCompleted()` instead of comparing a status word in the menu. `Project` implements the same interface. A project is complete only when it has tasks and every task is completed. Status values are only `Pending`, `In Progress`, and `Completed`.
 
-Fields are private. Most of them are set once in the constructor. Task status can change, but only to a `TaskStatus`. The project array stays inside `ProjectService`. The task array stays inside `Project`.
+Fields are private. Most of them are set once in the constructor. Task status can change, but only to a `TaskStatus`. The project array stays inside `ProjectService`. The task array stays inside `Project`. The user array stays inside `UserService`.
 
 Projects, tasks, and users are stored in arrays, with a count of how many slots are used. Finding an id walks the array from the start. That is a linear search, O(n). The catalog sorts a copy by name with bubble sort, O(n²). The stored array keeps the order projects were added, so ids stay `PRJ001`, `PRJ002`, and so on.
 
@@ -134,11 +134,14 @@ src/
   Main.java
   models/       Project, SoftwareProject, HardwareProject, Task, TaskStatus, User, RegularUser, AdminUser, StatusReport
   interfaces/   Completable
-  services/     ProjectService, TaskService, ReportService
-  utils/        ConsoleMenu, ValidationUtils
+  services/     ProjectService, TaskService, ReportService, UserService
+  utils/        ConsoleMenu, ValidationUtils, SampleDataLoader
 docs/
   class-diagram.png
   design-decisions.md
+  lab2-implementation-plan.md
 ```
 
-`Main` only starts the menu. `ConsoleMenu` prints the screens. `ValidationUtils` checks numbers, empty text, email, and ids.
+`Main` only starts the menu. `ConsoleMenu` prints the screens. `UserService` stores users and the logged-in user. `SampleDataLoader` fills the arrays at startup. `ValidationUtils` checks numbers, empty text, email, and ids.
+
+Lab 2 builds on this program in four phases. What is done, and what comes next, is in [docs/lab2-implementation-plan.md](docs/lab2-implementation-plan.md).

@@ -20,7 +20,7 @@ public class ProjectService {
         return projectCount >= MAX_PROJECTS;
     }
 
-    public void add(Project project) {
+    public void addProject(Project project) {
         projects[projectCount] = project;
         projectCount++;
     }
@@ -53,24 +53,50 @@ public class ProjectService {
     }
 
     public void printByType(String type) {
-        Project[] matches = collectByType(type);
-        if (matches.length == 0) {
+        int matches = 0;
+        for (int i = 0; i < projectCount; i++) {
+            if (projects[i].getType().equals(type)) {
+                matches++;
+            }
+        }
+        Project[] result = new Project[matches];
+        int index = 0;
+        for (int i = 0; i < projectCount; i++) {
+            if (projects[i].getType().equals(type)) {
+                result[index] = projects[i];
+                index++;
+            }
+        }
+        if (result.length == 0) {
             System.out.println("None.");
             return;
         }
-        sortByName(matches);
-        printTable(matches);
+        sortByName(result);
+        printTable(result);
     }
 
     public void printByBudget(double min, double max) {
-        Project[] matches = collectByBudget(min, max);
-        if (matches.length == 0) {
+        int matches = 0;
+        for (int i = 0; i < projectCount; i++) {
+            if (inBudget(projects[i], min, max)) {
+                matches++;
+            }
+        }
+        Project[] result = new Project[matches];
+        int index = 0;
+        for (int i = 0; i < projectCount; i++) {
+            if (inBudget(projects[i], min, max)) {
+                result[index] = projects[i];
+                index++;
+            }
+        }
+        if (result.length == 0) {
             System.out.println("No projects found.");
             return;
         }
-        sortByName(matches);
+        sortByName(result);
         System.out.printf(Locale.US, "Projects with budget from $%,.2f to $%,.2f:%n", min, max);
-        printTable(matches);
+        printTable(result);
     }
 
     private void printTable(Project[] matches) {
@@ -83,47 +109,6 @@ public class ProjectService {
         }
     }
 
-    private Project[] collectByType(String type) {
-        int matches = 0;
-        for (int i = 0; i < projectCount; i++) {
-            if (projects[i].getType().equals(type)) {
-                matches++;
-            }
-        }
-        return copyMatches(type, matches);
-    }
-
-    private Project[] copyMatches(String type, int matches) {
-        Project[] result = new Project[matches];
-        int index = 0;
-        for (int i = 0; i < projectCount; i++) {
-            if (projects[i].getType().equals(type)) {
-                result[index] = projects[i];
-                index++;
-            }
-        }
-        return result;
-    }
-
-    private Project[] collectByBudget(double min, double max) {
-        int matches = 0;
-        for (int i = 0; i < projectCount; i++) {
-            if (inBudget(projects[i], min, max)) {
-                matches++;
-            }
-        }
-
-        Project[] result = new Project[matches];
-        int index = 0;
-        for (int i = 0; i < projectCount; i++) {
-            if (inBudget(projects[i], min, max)) {
-                result[index] = projects[i];
-                index++;
-            }
-        }
-        return result;
-    }
-
     private boolean inBudget(Project project, double min, double max) {
         return project.getBudget() >= min && project.getBudget() <= max;
     }
@@ -131,9 +116,7 @@ public class ProjectService {
     private void sortByName(Project[] list) {
         for (int pass = 0; pass < list.length - 1; pass++) {
             for (int i = 0; i < list.length - 1 - pass; i++) {
-                String left = list[i].getName();
-                String right = list[i + 1].getName();
-                if (left.compareToIgnoreCase(right) > 0) {
+                if (list[i].getName().compareToIgnoreCase(list[i + 1].getName()) > 0) {
                     Project temp = list[i];
                     list[i] = list[i + 1];
                     list[i + 1] = temp;
