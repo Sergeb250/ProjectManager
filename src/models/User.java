@@ -17,8 +17,6 @@ public abstract class User {
         this.role = role;
     }
 
-    public abstract void printUserReport();
-
     public abstract boolean canUpdateAndDelete();
 
     public String getId() {

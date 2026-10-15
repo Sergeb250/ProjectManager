@@ -12,7 +12,13 @@ import services.ProjectService;
 import services.ReportService;
 import services.TaskService;
 import services.UserService;
+import utils.exceptions.EmptyProjectException;
+import utils.exceptions.InvalidInputException;
+import utils.exceptions.InvalidProjectDataException;
+import utils.exceptions.ProjectNotFoundException;
+import utils.exceptions.TaskNotFoundException;
 
+import java.util.Locale;
 import java.util.Scanner;
 
 public class ConsoleMenu {
@@ -48,7 +54,7 @@ public class ConsoleMenu {
             System.out.println("4. Switch User");
             System.out.println("5. Exit");
             System.out.println();
-            choice = ValidationUtils.readChoiceInRange(scanner, "Enter your choice: ", 1, 5);
+            choice = readChoice("Enter your choice: ", 1, 5);
             switch (choice) {
                 case 1:
                     manageProjects();
@@ -79,7 +85,7 @@ public class ConsoleMenu {
             System.out.println("1. Add Project");
             System.out.println("2. Browse Project Catalog");
             System.out.println("3. <<Back");
-            int choice = ValidationUtils.readChoiceInRange(scanner, "Enter your choice: ", 1, 3);
+            int choice = readChoice("Enter your choice: ", 1, 3);
             switch (choice) {
                 case 1:
                     addProject();
@@ -105,7 +111,7 @@ public class ConsoleMenu {
             System.out.println("3. Hardware Projects Only");
             System.out.println("4. Search by Budget Range");
             System.out.println("5. <<Back");
-            int choice = ValidationUtils.readChoiceInRange(scanner, "Enter filter choice: ", 1, 5);
+            int choice = readChoice("Enter filter choice: ", 1, 5);
             if (choice == 5) {
                 return;
             }
@@ -132,7 +138,7 @@ public class ConsoleMenu {
                 System.out.println();
                 System.out.println("1. View Project Details");
                 System.out.println("2. <<Back");
-                int next = ValidationUtils.readChoiceInRange(scanner, "Enter your choice: ", 1, 2);
+                int next = readChoice("Enter your choice: ", 1, 2);
                 if (next == 2) {
                     break;
                 }
@@ -149,19 +155,25 @@ public class ConsoleMenu {
         System.out.println();
         System.out.println("1. Enter Budget Range");
         System.out.println("2. <<Back");
-        int choice = ValidationUtils.readChoiceInRange(scanner, "Enter your choice: ", 1, 2);
+        int choice = readChoice("Enter your choice: ", 1, 2);
         if (choice == 2) {
             return false;
         }
         while (true) {
-            double min = ValidationUtils.readBudget(scanner, "Enter minimum budget: ");
-            double max = ValidationUtils.readBudget(scanner, "Enter maximum budget: ");
-            if (max < min) {
-                System.out.println(" Error: Maximum budget must be greater than or equal to minimum budget.");
-                continue;
+            try {
+                double min = readBudget("Enter minimum budget: ");
+                double max = readBudget("Enter maximum budget: ");
+                if (max < min) {
+                    throw new InvalidProjectDataException(
+                            "Maximum budget must be greater than or equal to minimum budget.");
+                }
+                projectService.printByBudget(min, max);
+                return true;
+            } catch (InvalidProjectDataException ex) {
+                printError(ex);
+                System.out.println("Please try again.");
+            } finally {
             }
-            projectService.printByBudget(min, max);
-            return true;
         }
     }
 
@@ -169,14 +181,19 @@ public class ConsoleMenu {
         while (true) {
             printBanner("PROJECT DETAILS: " + project.getId());
             System.out.println();
-            project.displayProject(true);
+            try {
+                printProject(project);
+            } catch (EmptyProjectException ex) {
+                printError(ex);
+            } finally {
+            }
             System.out.println();
             System.out.println("Options:");
             System.out.println("1. Add New Task");
             System.out.println("2. Update Task Status");
             System.out.println("3. Remove Task");
             System.out.println("4. <<Back");
-            int choice = ValidationUtils.readChoiceInRange(scanner, "Enter your choice: ", 1, 4);
+            int choice = readChoice("Enter your choice: ", 1, 4);
             switch (choice) {
                 case 1:
                     addTaskTo(project);
@@ -204,7 +221,7 @@ public class ConsoleMenu {
             System.out.println("3. Update Task Status");
             System.out.println("4. Remove Task");
             System.out.println("5. <<Back");
-            int choice = ValidationUtils.readChoiceInRange(scanner, "Enter your choice: ", 1, 5);
+            int choice = readChoice("Enter your choice: ", 1, 5);
             switch (choice) {
                 case 1:
                     addTask();
@@ -232,20 +249,21 @@ public class ConsoleMenu {
         reportService.printReport(projectService);
         System.out.println();
         System.out.println("1. <<Back");
-        ValidationUtils.readChoiceInRange(scanner, "Enter your choice: ", 1, 1);
+        readChoice("Enter your choice: ", 1, 1);
     }
 
     private void switchUser() {
         printBanner("SWITCH USER");
         System.out.println();
         for (int i = 0; i < userService.getCount(); i++) {
-            System.out.print((i + 1) + ". ");
-            userService.getAt(i).printUserReport();
+            User user = userService.getAt(i);
+            String canUpdate = user.canUpdateAndDelete() ? "Yes" : "No";
+            System.out.println((i + 1) + ". " + user.getId() + " | " + user.getName() + " | " + user.getRole()
+                    + " | Can update and delete: " + canUpdate);
         }
         System.out.println((userService.getCount() + 1) + ". Create User");
         System.out.println((userService.getCount() + 2) + ". <<Back");
-        int choice = ValidationUtils.readChoiceInRange(
-                scanner, "Enter your choice: ", 1, userService.getCount() + 2);
+        int choice = readChoice("Enter your choice: ", 1, userService.getCount() + 2);
         if (choice == userService.getCount() + 2) {
             return;
         }
@@ -266,8 +284,8 @@ public class ConsoleMenu {
             System.out.println("The user list is full.");
             return;
         }
-        String name = ValidationUtils.readText(scanner, "Enter user name: ");
-        String email = ValidationUtils.readEmail(scanner, "Enter email: ");
+        String name = readText("Enter user name: ");
+        String email = readEmail("Enter email: ");
         if (userService.emailExists(email)) {
             System.out.println(" Error: That email is already used.");
             return;
@@ -275,7 +293,7 @@ public class ConsoleMenu {
         System.out.println("1. Regular User");
         System.out.println("2. Admin User");
         System.out.println("3. <<Back");
-        int role = ValidationUtils.readChoiceInRange(scanner, "Enter role: ", 1, 3);
+        int role = readChoice("Enter role: ", 1, 3);
         if (role == 3) {
             return;
         }
@@ -286,7 +304,9 @@ public class ConsoleMenu {
             user = new RegularUser(name, email);
         }
         userService.addUser(user);
-        user.printUserReport();
+        String canUpdate = user.canUpdateAndDelete() ? "Yes" : "No";
+        System.out.println(user.getId() + " | " + user.getName() + " | " + user.getRole()
+                + " | Can update and delete: " + canUpdate);
         System.out.println("✓ User created. ID: " + user.getId());
     }
 
@@ -299,26 +319,24 @@ public class ConsoleMenu {
         System.out.println("1. Software Project");
         System.out.println("2. Hardware Project");
         System.out.println("3. <<Back");
-        int typeChoice = ValidationUtils.readChoiceInRange(scanner, "Enter project type: ", 1, 3);
+        int typeChoice = readChoice("Enter project type: ", 1, 3);
         if (typeChoice == 3) {
             return;
         }
 
-        String name = ValidationUtils.readText(scanner, "Enter project name: ");
-        String description = ValidationUtils.readText(scanner, "Enter description: ");
-        int duration = ValidationUtils.readPositiveInt(scanner, "Enter duration (days): ",
-                " Error: Duration must be greater than 0.");
-        double budget = ValidationUtils.readBudget(scanner, "Enter budget: ");
-        int teamSize = ValidationUtils.readPositiveInt(scanner, "Enter team size: ",
-                " Error: Team size must be greater than 0.");
+        String name = readText("Enter project name: ");
+        String description = readText("Enter description: ");
+        int duration = readPositiveInt("Enter duration (days): ", "Duration must be greater than 0.");
+        double budget = readBudget("Enter budget: ");
+        int teamSize = readPositiveInt("Enter team size: ", "Team size must be greater than 0.");
         String leadName = userService.getCurrentUser().getName();
 
         Project project;
         if (typeChoice == 1) {
-            String technology = ValidationUtils.readText(scanner, "Enter technology: ");
+            String technology = readText("Enter technology: ");
             project = new SoftwareProject(name, description, teamSize, duration, budget, leadName, technology);
         } else {
-            String equipment = ValidationUtils.readText(scanner, "Enter equipment: ");
+            String equipment = readText("Enter equipment: ");
             project = new HardwareProject(name, description, teamSize, duration, budget, leadName, equipment);
         }
 
@@ -334,7 +352,7 @@ public class ConsoleMenu {
         }
         printBanner("ADD NEW TASK");
         System.out.println();
-        String name = ValidationUtils.readText(scanner, "Enter task name: ");
+        String name = readText("Enter task name: ");
         Project project = promptForProject("Enter project ID: ");
         if (project == null) {
             return;
@@ -345,23 +363,21 @@ public class ConsoleMenu {
     private void addTaskTo(Project project) {
         printBanner("ADD NEW TASK");
         System.out.println();
-        String name = ValidationUtils.readText(scanner, "Enter task name: ");
+        String name = readText("Enter task name: ");
         addTaskTo(project, name, "");
     }
 
     private void addTaskTo(Project project, String name, String assignedTo) {
-        if (project.isTaskListFull()) {
+        if (taskService.isTaskListFull(project)) {
             System.out.println("This project cannot take more tasks.");
             return;
         }
-        if (project.hasTaskName(name)) {
+        if (taskService.hasTaskName(project, name)) {
             System.out.println("Error: A task with that name already exists on this project.");
             return;
         }
-        TaskStatus status = ValidationUtils.readStatus(scanner,
-                "Enter initial status (Pending/In Progress/Completed): ");
-        int hours = ValidationUtils.readPositiveInt(scanner, "Enter hours: ",
-                "Error: Hours must be greater than 0.");
+        TaskStatus status = readStatus("Enter initial status (Pending/In Progress/Completed): ");
+        int hours = readPositiveInt("Enter hours: ", "Hours must be greater than 0.");
         Task task = taskService.addTask(project, name, assignedTo, status, hours);
         if (task == null) {
             System.out.println(" Error: A task with that name already exists on this project.");
@@ -377,7 +393,7 @@ public class ConsoleMenu {
             return;
         }
         System.out.println("Tasks for " + project.getId() + " " + project.getName() + ":");
-        project.printTaskTable();
+        printTasks(project);
     }
 
     private void updateTaskStatus() {
@@ -398,7 +414,7 @@ public class ConsoleMenu {
         if (task == null) {
             return;
         }
-        TaskStatus status = ValidationUtils.readStatus(scanner, "Enter new status: ");
+        TaskStatus status = readStatus("Enter new status: ");
         taskService.updateStatus(task, status);
         System.out.println("✓ Task \"" + task.getName() + "\" marked as " + status.getLabel() + ".");
     }
@@ -407,75 +423,132 @@ public class ConsoleMenu {
         if (!requireAdmin("remove a task")) {
             return;
         }
-        String taskId = ValidationUtils.readPrefixedId(scanner, "Enter task ID (or 0 to return): ", "TSK", true);
-        if (taskId == null) {
-            return;
+        try {
+            String taskId = readId("Enter task ID (or 0 to return): ", "TSK", true);
+            if (taskId == null) {
+                return;
+            }
+            Task removed = taskService.remove(taskId);
+            if (removed == null) {
+                throw new TaskNotFoundException("Task '" + taskId + "' was not found in the project.");
+            }
+            System.out.println("✓ Task \"" + removed.getName() + "\" removed.");
+        } catch (TaskNotFoundException ex) {
+            printError(ex);
+            System.out.println("Operation aborted. Returning to task menu...");
+        } finally {
         }
-        confirmRemoved(taskService.remove(taskId));
     }
 
     private void removeTaskOn(Project project) {
         if (!requireAdmin("remove a task")) {
             return;
         }
-        String taskId = ValidationUtils.readPrefixedId(scanner, "Enter task ID (or 0 to return): ", "TSK", true);
-        if (taskId == null) {
-            return;
+        try {
+            String taskId = readId("Enter task ID (or 0 to return): ", "TSK", true);
+            if (taskId == null) {
+                return;
+            }
+            Task removed = taskService.remove(project, taskId);
+            if (removed == null) {
+                throw new TaskNotFoundException("Task '" + taskId + "' was not found in the project.");
+            }
+            System.out.println("✓ Task \"" + removed.getName() + "\" removed.");
+        } catch (TaskNotFoundException ex) {
+            printError(ex);
+            System.out.println("Operation aborted. Returning to task menu...");
+        } finally {
         }
-        confirmRemoved(taskService.remove(project, taskId));
-    }
-
-    private void confirmRemoved(Task removed) {
-        if (removed == null) {
-            System.out.println("Task not found.");
-            return;
-        }
-        System.out.println("✓ Task \"" + removed.getName() + "\" removed.");
     }
 
     private Project promptForProject(String prompt) {
         while (true) {
-            String projectId = ValidationUtils.readPrefixedId(scanner, prompt, "PRJ", true);
-            if (projectId == null) {
-                return null;
+            try {
+                String projectId = readId(prompt, "PRJ", true);
+                if (projectId == null) {
+                    return null;
+                }
+                Project project = projectService.findById(projectId);
+                if (project == null) {
+                    throw new ProjectNotFoundException("Project ID '" + projectId + "' does not exist.");
+                }
+                return project;
+            } catch (ProjectNotFoundException ex) {
+                printError(ex);
+                System.out.println("Please try again.");
+            } finally {
             }
-            Project project = projectService.findById(projectId);
-            if (project == null) {
-                System.out.println("Project not found.");
-                continue;
-            }
-            return project;
         }
     }
 
     private Task promptForTask() {
-        while (true) {
-            String taskId = ValidationUtils.readPrefixedId(scanner, "Enter task ID: ", "TSK", true);
+        try {
+            String taskId = readId("Enter task ID: ", "TSK", true);
             if (taskId == null) {
                 return null;
             }
             Task task = taskService.findById(taskId);
             if (task == null) {
-                System.out.println("Task not found.");
-                continue;
+                throw new TaskNotFoundException("Task '" + taskId + "' was not found in the project.");
             }
             return task;
+        } catch (TaskNotFoundException ex) {
+            printError(ex);
+            System.out.println("Operation aborted. Returning to task menu...");
+            return null;
+        } finally {
         }
     }
 
     private Task promptForTaskOn(Project project) {
-        while (true) {
-            String taskId = ValidationUtils.readPrefixedId(scanner, "Enter task ID: ", "TSK", true);
+        try {
+            String taskId = readId("Enter task ID: ", "TSK", true);
             if (taskId == null) {
                 return null;
             }
-            Task task = project.findTaskById(taskId);
+            Task task = taskService.findTaskById(project, taskId);
             if (task == null) {
-                System.out.println("Task not found.");
-                continue;
+                throw new TaskNotFoundException("Task '" + taskId + "' was not found in the project.");
             }
             return task;
+        } catch (TaskNotFoundException ex) {
+            printError(ex);
+            System.out.println("Operation aborted. Returning to task menu...");
+            return null;
+        } finally {
         }
+    }
+
+    private void printProject(Project project) throws EmptyProjectException {
+        System.out.println("Project Name: " + project.getName());
+        System.out.println("Type: " + project.getType());
+        System.out.println("Team Size: " + project.getTeamSize());
+        System.out.printf(Locale.US, "Budget: $%,.2f%n", project.getBudget());
+        System.out.println("Description: " + project.getDescription());
+        System.out.println(project.getProjectDetails());
+        System.out.println();
+        System.out.println("Associated Tasks:");
+        printTasks(project);
+        if (project.getTaskCount() == 0) {
+            throw new EmptyProjectException("Project '" + project.getId() + "' has no tasks.");
+        }
+        System.out.printf(Locale.US, "Completion Rate: %.2f%%%n", taskService.calculateCompletionPercentage(project));
+    }
+
+    private void printTasks(Project project) {
+        if (project.getTaskCount() == 0) {
+            System.out.println("No tasks found.");
+            return;
+        }
+        System.out.println("───────────────────────────────────────────────────────────────────────");
+        System.out.printf("%-8s | %-20s | %s%n", "ID", "TASK NAME", "STATUS");
+        System.out.println("───────────────────────────────────────────────────────────────────────");
+        for (int i = 0; i < project.getTaskCount(); i++) {
+            Task task = taskService.getTaskAt(project, i);
+            System.out.printf("%-8s | %-20s | %s%n",
+                    task.getId(), task.getName(), task.getStatus().getLabel());
+        }
+        System.out.println("───────────────────────────────────────────────────────────────────────");
     }
 
     private boolean requireAdmin(String action) {
@@ -484,6 +557,100 @@ public class ConsoleMenu {
         }
         System.out.println("Only an admin can " + action + ".");
         return false;
+    }
+
+    private int readChoice(String prompt, int min, int max) {
+        while (true) {
+            try {
+                return ValidationUtils.readChoiceInRange(scanner, prompt, min, max);
+            } catch (InvalidInputException ex) {
+                printError(ex);
+                System.out.println("Please try again.");
+            } finally {
+            }
+        }
+    }
+
+    private String readText(String prompt) {
+        while (true) {
+            try {
+                return ValidationUtils.readText(scanner, prompt);
+            } catch (InvalidInputException ex) {
+                printError(ex);
+                System.out.println("Please try again.");
+            } finally {
+            }
+        }
+    }
+
+    private String readEmail(String prompt) {
+        while (true) {
+            try {
+                return ValidationUtils.readEmail(scanner, prompt);
+            } catch (InvalidInputException ex) {
+                printError(ex);
+                System.out.println("Please try again.");
+            } finally {
+            }
+        }
+    }
+
+    private double readBudget(String prompt) {
+        while (true) {
+            try {
+                return ValidationUtils.readBudget(scanner, prompt);
+            } catch (InvalidInputException ex) {
+                printError(ex);
+                System.out.println("Please try again.");
+            } catch (InvalidProjectDataException ex) {
+                printError(ex);
+                System.out.println("Please try again.");
+            } finally {
+            }
+        }
+    }
+
+    private int readPositiveInt(String prompt, String message) {
+        while (true) {
+            try {
+                return ValidationUtils.readPositiveInt(scanner, prompt, message);
+            } catch (InvalidInputException ex) {
+                printError(ex);
+                System.out.println("Please try again.");
+            } catch (InvalidProjectDataException ex) {
+                printError(ex);
+                System.out.println("Please try again.");
+            } finally {
+            }
+        }
+    }
+
+    private TaskStatus readStatus(String prompt) {
+        while (true) {
+            try {
+                return ValidationUtils.readStatus(scanner, prompt);
+            } catch (InvalidInputException ex) {
+                printError(ex);
+                System.out.println("Please try again.");
+            } finally {
+            }
+        }
+    }
+
+    private String readId(String prompt, String prefix, boolean allowZero) {
+        while (true) {
+            try {
+                return ValidationUtils.readPrefixedId(scanner, prompt, prefix, allowZero);
+            } catch (InvalidInputException ex) {
+                printError(ex);
+                System.out.println("Please try again.");
+            } finally {
+            }
+        }
+    }
+
+    private void printError(Exception ex) {
+        System.out.println("❌ Error: " + ex.getClass().getSimpleName() + " – " + ex.getMessage());
     }
 
     private void printBanner(String title) {

@@ -2,8 +2,6 @@ package models;
 
 import interfaces.Completable;
 
-import java.util.Locale;
-
 public abstract class Project implements Completable {
 
     public static final int MAX_TASKS = 20;
@@ -38,133 +36,33 @@ public abstract class Project implements Completable {
 
     public abstract String getProjectDetails();
 
-    public void displayProject() {
-        displayProject(false);
-    }
-
-    public void displayProject(boolean includeTasks) {
-        printDetails();
-        if (includeTasks) {
-            System.out.println();
-            System.out.println("Associated Tasks:");
-            printTaskTable();
-        }
-        printCompletion();
-    }
-
-    private void printDetails() {
-        System.out.println("Project Name: " + name);
-        System.out.println("Type: " + getType());
-        System.out.println("Team Size: " + teamSize);
-        System.out.println("Budget: " + formatMoney(budget));
-        System.out.println("Description: " + description);
-        System.out.println(getProjectDetails());
-    }
-
-    private void printCompletion() {
-        System.out.printf(Locale.US, "Completion Rate: %.2f%%%n", calculateCompletionPercentage());
-    }
-
-    public void displayCatalogRow() {
-        System.out.printf(Locale.US, "%-8s | %-20s | %-10s | %-9d | %s%n",
-                id, fit(name, 20), getType(), teamSize, formatMoney(budget));
-        System.out.println("         | Description: " + description);
-        System.out.println("──────────────────────────────────────────────────────────────────────────────────────────────");
-    }
-
-    public void printTaskTable() {
-        if (taskCount == 0) {
-            System.out.println("No tasks found.");
-            return;
-        }
-        System.out.println("───────────────────────────────────────────────────────────────────────");
-        System.out.printf("%-8s | %-20s | %s%n", "ID", "TASK NAME", "STATUS");
-        System.out.println("───────────────────────────────────────────────────────────────────────");
-        for (int i = 0; i < taskCount; i++) {
-            Task task = tasks[i];
-            System.out.printf("%-8s | %-20s | %s%n",
-                    task.getId(), fit(task.getName(), 20), task.getStatus().getLabel());
-        }
-        System.out.println("───────────────────────────────────────────────────────────────────────");
-    }
-
+    // True only when every stored task is completed. A project with no tasks is not completed.
     @Override
     public boolean isCompleted() {
-        return taskCount > 0 && countByStatus(TaskStatus.COMPLETED) == taskCount;
-    }
-
-    public double calculateCompletionPercentage() {
         if (taskCount == 0) {
-            return 0.0;
-        }
-        return (countByStatus(TaskStatus.COMPLETED) * 100.0) / taskCount;
-    }
-
-    public int countByStatus(TaskStatus status) {
-        int count = 0;
-        for (int i = 0; i < taskCount; i++) {
-            if (tasks[i].getStatus() == status) {
-                count++;
-            }
-        }
-        return count;
-    }
-
-    public int getCompletedCount() {
-        return countByStatus(TaskStatus.COMPLETED);
-    }
-
-    public boolean isTaskListFull() {
-        return taskCount >= MAX_TASKS;
-    }
-
-    public boolean addTask(Task task) {
-        if (isTaskListFull()) {
             return false;
         }
-        tasks[taskCount] = task;
-        taskCount++;
+        for (int i = 0; i < taskCount; i++) {
+            if (!tasks[i].isCompleted()) {
+                return false;
+            }
+        }
         return true;
     }
 
-    public boolean hasTaskName(String name) {
-        for (int i = 0; i < taskCount; i++) {
-            if (tasks[i].getName().equalsIgnoreCase(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public Task findTaskById(String taskId) {
-        for (int i = 0; i < taskCount; i++) {
-            if (tasks[i].getId().equalsIgnoreCase(taskId)) {
-                return tasks[i];
-            }
-        }
-        return null;
-    }
-
-    public Task getTaskAt(int index) {
-        if (index < 0 || index >= taskCount) {
-            throw new IllegalArgumentException("Task index is out of range.");
-        }
+    // The task array stays private. TaskService uses this to read one slot.
+    public Task readTask(int index) {
         return tasks[index];
     }
 
-    public Task removeTaskById(String taskId) {
-        for (int i = 0; i < taskCount; i++) {
-            if (tasks[i].getId().equalsIgnoreCase(taskId)) {
-                Task removed = tasks[i];
-                for (int j = i; j < taskCount - 1; j++) {
-                    tasks[j] = tasks[j + 1];
-                }
-                tasks[taskCount - 1] = null;
-                taskCount--;
-                return removed;
-            }
-        }
-        return null;
+    // TaskService uses this to store a task, or to clear a slot with null when a task is removed.
+    public void writeTask(int index, Task task) {
+        tasks[index] = task;
+    }
+
+    // TaskService updates the count after it adds or removes a task.
+    public void setTaskCount(int taskCount) {
+        this.taskCount = taskCount;
     }
 
     public String getId() {
@@ -199,17 +97,5 @@ public abstract class Project implements Completable {
         return taskCount;
     }
 
-    private String formatMoney(double amount) {
-        if (amount == Math.rint(amount)) {
-            return String.format(Locale.US, "$%,.0f", amount);
-        }
-        return String.format(Locale.US, "$%,.2f", amount);
-    }
 
-    private String fit(String value, int width) {
-        if (value.length() <= width) {
-            return value;
-        }
-        return value.substring(0, width);
-    }
 }

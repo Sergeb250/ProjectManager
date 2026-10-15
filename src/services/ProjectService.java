@@ -105,7 +105,11 @@ public class ProjectService {
                 "ID", "PROJECT NAME", "TYPE", "TEAM SIZE", "BUDGET");
         System.out.println("──────────────────────────────────────────────────────────────────────────────────────────────");
         for (int i = 0; i < matches.length; i++) {
-            matches[i].displayCatalogRow();
+            Project project = matches[i];
+            System.out.printf(Locale.US, "%-8s | %-20s | %-10s | %-9d | $%,.2f%n",
+                    project.getId(), project.getName(), project.getType(), project.getTeamSize(), project.getBudget());
+            System.out.println("         | Description: " + project.getDescription());
+            System.out.println("──────────────────────────────────────────────────────────────────────────────────────────────");
         }
     }
 

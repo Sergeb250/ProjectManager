@@ -1,7 +1,5 @@
 package models;
 
-import java.util.Locale;
-
 public class StatusReport {
 
     private final String projectId;
@@ -13,35 +11,24 @@ public class StatusReport {
     private final double completionPercent;
     private final boolean complete;
 
-    public StatusReport(Project project) {
-        this.projectId = project.getId();
-        this.projectName = project.getName();
-        this.completedTasks = project.countByStatus(TaskStatus.COMPLETED);
-        this.pendingTasks = project.countByStatus(TaskStatus.PENDING);
-        this.inProgressTasks = project.countByStatus(TaskStatus.IN_PROGRESS);
-        this.totalTasks = project.getTaskCount();
-        this.completionPercent = project.calculateCompletionPercentage();
-        this.complete = project.isCompleted();
+    public StatusReport(String projectId, String projectName, int completedTasks, int pendingTasks,
+                        int inProgressTasks, int totalTasks, double completionPercent, boolean complete) {
+        this.projectId = projectId;
+        this.projectName = projectName;
+        this.completedTasks = completedTasks;
+        this.pendingTasks = pendingTasks;
+        this.inProgressTasks = inProgressTasks;
+        this.totalTasks = totalTasks;
+        this.completionPercent = completionPercent;
+        this.complete = complete;
     }
 
-    public void printRow() {
-        System.out.printf(Locale.US, "%-10s | %-20s | %5d | %9d | %8.2f%%%n",
-                projectId, projectName, totalTasks, completedTasks, completionPercent);
+    public String getProjectId() {
+        return projectId;
     }
 
-    public void print() {
-        System.out.println("Project ID: " + projectId);
-        System.out.println("Name: " + projectName);
-        System.out.println("Total tasks: " + totalTasks);
-        System.out.println("Completed tasks: " + completedTasks);
-        System.out.println("Pending tasks: " + pendingTasks);
-        System.out.println("In progress tasks: " + inProgressTasks);
-        System.out.printf(Locale.US, "Completion %%: %.2f%%%n", completionPercent);
-        if (totalTasks == 0) {
-            System.out.println("This project has no tasks.");
-        } else if (complete) {
-            System.out.println("This project is complete.");
-        }
+    public String getProjectName() {
+        return projectName;
     }
 
     public double getCompletionPercent() {
@@ -62,5 +49,9 @@ public class StatusReport {
 
     public int getInProgressTasks() {
         return inProgressTasks;
+    }
+
+    public boolean isComplete() {
+        return complete;
     }
 }

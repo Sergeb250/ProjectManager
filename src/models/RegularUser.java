@@ -7,11 +7,6 @@ public class RegularUser extends User {
     }
 
     @Override
-    public void printUserReport() {
-        System.out.println(getId() + " | " + getName() + " | Regular | Can update and delete: No");
-    }
-
-    @Override
     public boolean canUpdateAndDelete() {
         return false;
     }

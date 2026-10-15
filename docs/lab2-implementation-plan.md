@@ -30,8 +30,8 @@ Keep these Lab 1 rules while adding Lab 2:
 | Lab 2 item | Status | Phase |
 | --- | --- | --- |
 | SOLID split into services and utils | Done in code | Phase 1 |
-| Custom exceptions | Missing. There is no `utils/exceptions` package | Phase 2 |
-| try-catch around menu input | Missing. Validation retries, but it does not throw project exceptions | Phase 2 |
+| Custom exceptions | Done on branch `feature/exceptions` | Phase 2 |
+| try-catch around menu input | Done. The menu catches the exception and stays open | Phase 2 |
 | JUnit 5 tests | Missing. There is no `test/` folder | Phase 3 |
 | Feature branch, then merge | Branch `feature/refactor` holds Phase 1. Not merged yet | Phase 4 |
 | README section on Git workflow | Not written yet | Phase 4 |
@@ -135,6 +135,6 @@ Do that before the merge. Do not rebase after the branch has been pushed for som
 ## Phase order
 
 1. Phase 1 — structure only. Done in the source.
-2. Phase 2 — exceptions, and a menu that catches them.
+2. Phase 2 — exceptions, and a menu that catches them. Done on branch `feature/exceptions`.
 3. Phase 3 — at least three passing JUnit tests.
 4. Phase 4 — branch, commit, merge, push, and a short Git section in the README.
