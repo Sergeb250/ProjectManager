@@ -26,14 +26,6 @@ public class Task implements Completable {
         return status == TaskStatus.COMPLETED;
     }
 
-    public void printDetails() {
-        System.out.println("Task ID: " + id);
-        System.out.println("Name: " + name);
-        System.out.println("Assigned To: " + assignedTo);
-        System.out.println("Status: " + status.getLabel());
-        System.out.println("Hours: " + hours);
-    }
-
     public String getId() {
         return id;
     }

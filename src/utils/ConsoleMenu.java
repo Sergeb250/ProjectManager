@@ -11,34 +11,25 @@ import models.User;
 import services.ProjectService;
 import services.ReportService;
 import services.TaskService;
+import services.UserService;
 
 import java.util.Scanner;
 
 public class ConsoleMenu {
 
-    private static final int MAX_USERS = 10;
-    private static final int BANNER_WIDTH = 44;
-
     private final Scanner scanner;
     private final ProjectService projectService;
     private final TaskService taskService;
     private final ReportService reportService;
+    private final UserService userService;
 
-    private final User[] users;
-    private int userCount;
-    private User currentUser;
-
-    public ConsoleMenu() {
+    public ConsoleMenu(ProjectService projectService, TaskService taskService,
+                       ReportService reportService, UserService userService) {
         scanner = new Scanner(System.in);
-        projectService = new ProjectService();
-        taskService = new TaskService(projectService);
-        reportService = new ReportService();
-        users = new User[MAX_USERS];
-        userCount = 0;
-        addUser(new AdminUser("eric mugisha", "eric.mugisha@amalitech.com"));
-        addUser(new RegularUser("shima elyse", "shima.elsyse@gmail.com"));
-        currentUser = users[0];
-        loadSampleData();
+        this.projectService = projectService;
+        this.taskService = taskService;
+        this.reportService = reportService;
+        this.userService = userService;
     }
 
     public void start() {
@@ -46,6 +37,7 @@ public class ConsoleMenu {
         do {
             printBanner("JAVA PROJECT MANAGEMENT SYSTEM");
             System.out.println();
+            User currentUser = userService.getCurrentUser();
             System.out.println("Current User: " + currentUser.getName() + " (" + currentUser.getRole() + ")");
             System.out.println();
             System.out.println("Main Menu:");
@@ -234,14 +226,6 @@ public class ConsoleMenu {
         }
     }
 
-    private void calculateCompletion() {
-        Project project = promptForProject("Enter project ID (or 0 to return): ");
-        if (project == null) {
-            return;
-        }
-        reportService.printReport(project);
-    }
-
     private void viewReports() {
         printBanner("PROJECT STATUS REPORT");
         System.out.println();
@@ -254,35 +238,37 @@ public class ConsoleMenu {
     private void switchUser() {
         printBanner("SWITCH USER");
         System.out.println();
-        for (int i = 0; i < userCount; i++) {
+        for (int i = 0; i < userService.getCount(); i++) {
             System.out.print((i + 1) + ". ");
-            users[i].printUserReport();
+            userService.getAt(i).printUserReport();
         }
-        System.out.println((userCount + 1) + ". Create User");
-        System.out.println((userCount + 2) + ". <<Back");
-        int choice = ValidationUtils.readChoiceInRange(scanner, "Enter your choice: ", 1, userCount + 2);
-        if (choice == userCount + 2) {
+        System.out.println((userService.getCount() + 1) + ". Create User");
+        System.out.println((userService.getCount() + 2) + ". <<Back");
+        int choice = ValidationUtils.readChoiceInRange(
+                scanner, "Enter your choice: ", 1, userService.getCount() + 2);
+        if (choice == userService.getCount() + 2) {
             return;
         }
-        if (choice == userCount + 1) {
+        if (choice == userService.getCount() + 1) {
             createUser();
             return;
         }
-        currentUser = users[choice - 1];
-        System.out.println("Current User: " + currentUser.getName() + " (" + currentUser.getRole() + ")");
+        User selected = userService.getAt(choice - 1);
+        userService.setCurrentUser(selected);
+        System.out.println("Current User: " + selected.getName() + " (" + selected.getRole() + ")");
     }
 
     private void createUser() {
         if (!requireAdmin("create a user")) {
             return;
         }
-        if (userCount >= MAX_USERS) {
+        if (userService.isFull()) {
             System.out.println("The user list is full.");
             return;
         }
         String name = ValidationUtils.readText(scanner, "Enter user name: ");
         String email = ValidationUtils.readEmail(scanner, "Enter email: ");
-        if (emailExists(email)) {
+        if (userService.emailExists(email)) {
             System.out.println(" Error: That email is already used.");
             return;
         }
@@ -299,7 +285,7 @@ public class ConsoleMenu {
         } else {
             user = new RegularUser(name, email);
         }
-        addUser(user);
+        userService.addUser(user);
         user.printUserReport();
         System.out.println("✓ User created. ID: " + user.getId());
     }
@@ -325,7 +311,7 @@ public class ConsoleMenu {
         double budget = ValidationUtils.readBudget(scanner, "Enter budget: ");
         int teamSize = ValidationUtils.readPositiveInt(scanner, "Enter team size: ",
                 " Error: Team size must be greater than 0.");
-        String leadName = currentUser.getName();
+        String leadName = userService.getCurrentUser().getName();
 
         Project project;
         if (typeChoice == 1) {
@@ -336,7 +322,7 @@ public class ConsoleMenu {
             project = new HardwareProject(name, description, teamSize, duration, budget, leadName, equipment);
         }
 
-        projectService.add(project);
+        projectService.addProject(project);
         System.out.println("✓ Project successfully created.");
         System.out.println("ID: " + project.getId() + " | Type: " + project.getType());
     }
@@ -376,7 +362,7 @@ public class ConsoleMenu {
                 "Enter initial status (Pending/In Progress/Completed): ");
         int hours = ValidationUtils.readPositiveInt(scanner, "Enter hours: ",
                 "Error: Hours must be greater than 0.");
-        Task task = taskService.add(project, name, assignedTo, status, hours);
+        Task task = taskService.addTask(project, name, assignedTo, status, hours);
         if (task == null) {
             System.out.println(" Error: A task with that name already exists on this project.");
             return;
@@ -398,20 +384,17 @@ public class ConsoleMenu {
         if (!requireAdmin("update a task")) {
             return;
         }
-        Task task = promptForTask();
-        if (task == null) {
-            return;
-        }
-        TaskStatus status = ValidationUtils.readStatus(scanner, "Enter new status: ");
-        taskService.updateStatus(task, status);
-        System.out.println("✓ Task \"" + task.getName() + "\" marked as " + status.getLabel() + ".");
+        changeStatus(promptForTask());
     }
 
     private void updateTaskOn(Project project) {
         if (!requireAdmin("update a task")) {
             return;
         }
-        Task task = promptForTaskOn(project);
+        changeStatus(promptForTaskOn(project));
+    }
+
+    private void changeStatus(Task task) {
         if (task == null) {
             return;
         }
@@ -428,12 +411,7 @@ public class ConsoleMenu {
         if (taskId == null) {
             return;
         }
-        Task removed = taskService.remove(taskId);
-        if (removed == null) {
-            System.out.println("Task not found.");
-            return;
-        }
-        System.out.println("✓ Task \"" + removed.getName() + "\" removed.");
+        confirmRemoved(taskService.remove(taskId));
     }
 
     private void removeTaskOn(Project project) {
@@ -444,7 +422,10 @@ public class ConsoleMenu {
         if (taskId == null) {
             return;
         }
-        Task removed = project.removeTaskById(taskId);
+        confirmRemoved(taskService.remove(project, taskId));
+    }
+
+    private void confirmRemoved(Task removed) {
         if (removed == null) {
             System.out.println("Task not found.");
             return;
@@ -497,76 +478,27 @@ public class ConsoleMenu {
         }
     }
 
-    private User chooseUser(String prompt) {
-        for (int i = 0; i < userCount; i++) {
-            System.out.println((i + 1) + ". " + users[i].getName() + " (" + users[i].getId() + ", " + users[i].getRole() + ")");
-        }
-        int choice = ValidationUtils.readChoiceInRange(scanner, prompt, 1, userCount);
-        return users[choice - 1];
-    }
-
     private boolean requireAdmin(String action) {
-        if (currentUser.canUpdateAndDelete()) {
+        if (userService.getCurrentUser().canUpdateAndDelete()) {
             return true;
         }
         System.out.println("Only an admin can " + action + ".");
         return false;
     }
 
-    private boolean emailExists(String email) {
-        for (int i = 0; i < userCount; i++) {
-            if (users[i].getEmail().equalsIgnoreCase(email)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void addUser(User user) {
-        users[userCount] = user;
-        userCount++;
-    }
-
-    private void loadSampleData() {
-        SoftwareProject alpha = new SoftwareProject(
-                "Alpha Tracker", "Task tracking app for startups", 5, 90, 15000, "Alice Johnson", "Java");
-        HardwareProject iot = new HardwareProject(
-                "IoT Sensor Kit", "Sensor prototype for smart devices", 3, 60, 10000, "Bob Smith", "Sensors");
-        SoftwareProject mobile = new SoftwareProject(
-                "Mobile Checkout", "Phone checkout for retail stores", 4, 40, 22000, "Alice Johnson", "Kotlin");
-        HardwareProject robot = new HardwareProject(
-                "Warehouse Robot", "Moving shelf robot for a warehouse", 6, 120, 48000, "Alice Johnson", "Motors");
-        SoftwareProject payroll = new SoftwareProject(
-                "Payroll Portal", "Staff pay and leave portal", 2, 30, 8000, "Bob Smith", "Java");
-
-        projectService.add(alpha);
-        projectService.add(iot);
-        projectService.add(mobile);
-        projectService.add(robot);
-        projectService.add(payroll);
-
-        taskService.add(alpha, "Design Database", "Alice Johnson", TaskStatus.COMPLETED, 8);
-        taskService.add(alpha, "Implement API", "Bob Smith", TaskStatus.IN_PROGRESS, 12);
-        taskService.add(alpha, "Write Unit Tests", "Bob Smith", TaskStatus.PENDING, 6);
-        taskService.add(iot, "Assemble Board", "Bob Smith", TaskStatus.COMPLETED, 10);
-        taskService.add(iot, "Calibrate Sensor", "Alice Johnson", TaskStatus.PENDING, 4);
-        taskService.add(mobile, "Build Cart", "Alice Johnson", TaskStatus.COMPLETED, 5);
-        taskService.add(mobile, "Payment Flow", "Bob Smith", TaskStatus.COMPLETED, 7);
-        taskService.add(robot, "Frame Build", "Bob Smith", TaskStatus.PENDING, 20);
-    }
-
     private void printBanner(String title) {
-        System.out.println("╔" + "═".repeat(BANNER_WIDTH) + "╗");
-        System.out.println("║" + center(title) + "║");
-        System.out.println("╚" + "═".repeat(BANNER_WIDTH) + "╝");
+        int width = 44;
+        System.out.println("╔" + "═".repeat(width) + "╗");
+        System.out.println("║" + center(title, width) + "║");
+        System.out.println("╚" + "═".repeat(width) + "╝");
     }
 
-    private String center(String title) {
-        if (title.length() >= BANNER_WIDTH) {
-            return title.substring(0, BANNER_WIDTH);
+    private String center(String title, int width) {
+        if (title.length() >= width) {
+            return title.substring(0, width);
         }
-        int left = (BANNER_WIDTH - title.length()) / 2;
-        int right = BANNER_WIDTH - title.length() - left;
+        int left = (width - title.length()) / 2;
+        int right = width - title.length() - left;
         return " ".repeat(left) + title + " ".repeat(right);
     }
 }

@@ -20,7 +20,7 @@ public class StatusReport {
         this.pendingTasks = project.countByStatus(TaskStatus.PENDING);
         this.inProgressTasks = project.countByStatus(TaskStatus.IN_PROGRESS);
         this.totalTasks = project.getTaskCount();
-        this.completionPercent = project.getCompletionPercentage();
+        this.completionPercent = project.calculateCompletionPercentage();
         this.complete = project.isCompleted();
     }
 

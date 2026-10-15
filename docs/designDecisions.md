@@ -23,11 +23,11 @@ A filled diamond means **has**. One `Project` has `0..20` tasks. Each `Task` has
 
 `displayProject()` and `displayProject(boolean)` are overloaded. The boolean version also prints the task table. `readPositiveInt` is overloaded the same way: one version uses a default message, the other takes the message for team size, duration, or hours. `ReportService.printReport(ProjectService)` prints every project. `ReportService.printReport(Project)` prints one project.
 
-`User` is abstract. `AdminUser` and `RegularUser` override `printUserReport()` and `canUpdateAndDelete()`. The menu stores both in one `User[]` and calls those methods. It does not check the class with `instanceof`. Update, remove, and create-user ask `canUpdateAndDelete()` first. A regular user can still view and add.
+`User` is abstract. `AdminUser` and `RegularUser` override `printUserReport()` and `canUpdateAndDelete()`. `UserService` stores both in one `User[]` and the menu calls those methods. It does not check the class with `instanceof`. Update, remove, and create-user ask `canUpdateAndDelete()` first. A regular user can still view and add.
 
 `Task` implements `Completable`. The completion count calls `isCompleted()` instead of comparing a status string in the menu. `Project` implements the same interface: a project is complete only when it has tasks and every task is completed. The allowed statuses are `Pending`, `In Progress`, and `Completed` in the `TaskStatus` enum.
 
-`StatusReport` is built from one project. `ReportService` creates one report per project, stores the percents in a temporary array, and prints the average. `ProjectService` stores the project array, finds a project by id, filters by type or budget, and sorts a copy by name. `TaskService` adds a task, finds a task id, updates the status, and removes a task. `ConsoleMenu` reads the menu. `ValidationUtils` checks numbers, email, empty text, and ids.
+`StatusReport` is built from one project. `ReportService` creates one report per project, stores the percents in a temporary array, and prints the average. The percentage itself is `Project.calculateCompletionPercentage()`. `ProjectService` stores the project array, finds a project by id, filters by type or budget with a plain loop, and sorts a copy by name. `TaskService` adds a task, finds a task id, updates the status, and removes a task. `UserService` stores users and the logged-in user. `Main` builds the services, loads the sample data, and starts the menu. `ConsoleMenu` only reads the menu. `SampleDataLoader` fills the arrays at startup. `ValidationUtils` checks numbers, email, empty text, and ids.
 
 ## Encapsulation
 
@@ -35,7 +35,7 @@ Fields are private. The id, name, description, team size, duration, budget, lead
 
 ## Arrays, search, and sort
 
-Projects live in a `Project[]` with a `projectCount` for how many slots are used. Each project has its own `Task[]` and `taskCount`. Users live in a `User[]`. Empty slots at the end are not real data.
+Projects live in a `Project[]` inside `ProjectService`, with a `projectCount` for how many slots are used. Each project has its own `Task[]` and `taskCount`. Users live in a `User[]` inside `UserService`. Empty slots at the end are not real data.
 
 Finding a project id or a task id is a linear search: look at each used slot until the id matches. For n items that is O(n). Each list holds at most 20 items, so that cost is small.
 

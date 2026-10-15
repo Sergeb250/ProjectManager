@@ -22,12 +22,14 @@ public class TaskService {
         return null;
     }
 
-    public Task add(Project project, String name, String assignedTo, TaskStatus status, int hours) {
-        if (project.hasTaskName(name)) {
+    public Task addTask(Project project, String name, String assignedTo, TaskStatus status, int hours) {
+        if (project.isTaskListFull() || project.hasTaskName(name)) {
             return null;
         }
         Task task = new Task(name, assignedTo, status, hours);
-        project.addTask(task);
+        if (!project.addTask(task)) {
+            return null;
+        }
         return task;
     }
 
@@ -43,5 +45,9 @@ public class TaskService {
             }
         }
         return null;
+    }
+
+    public Task remove(Project project, String taskId) {
+        return project.removeTaskById(taskId);
     }
 }
