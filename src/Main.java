@@ -12,7 +12,7 @@ public class Main {
     public static void main(String[] args) {
         ProjectService projectService = new ProjectService();
         TaskService taskService = new TaskService(projectService);
-        ReportService reportService = new ReportService();
+        ReportService reportService = new ReportService(taskService);
         UserService userService = new UserService();
         SampleDataLoader.load(projectService, taskService, userService);
 

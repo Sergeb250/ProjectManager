@@ -30,8 +30,8 @@ Keep these Lab 1 rules while adding Lab 2:
 | Lab 2 item | Status | Phase |
 | --- | --- | --- |
 | SOLID split into services and utils | Done in code | Phase 1 |
-| Custom exceptions | Missing. There is no `utils/exceptions` package | Phase 2 |
-| try-catch around menu input | Missing. Validation retries, but it does not throw project exceptions | Phase 2 |
+| Custom exceptions | Done on branch `feature/exceptions` | Phase 2 |
+| try-catch around menu input | Done. The menu catches the exception and stays open | Phase 2 |
 | JUnit 5 tests | Missing. There is no `test/` folder | Phase 3 |
 | Feature branch, then merge | Branch `feature/refactor` holds Phase 1. Not merged yet | Phase 4 |
 | README section on Git workflow | Not written yet | Phase 4 |
@@ -61,8 +61,7 @@ Add these classes under `src/utils/exceptions/`. Each one extends `Exception`, s
 
 | Class | When to throw it |
 | --- | --- |
-| `InvalidInputException` | Empty text, a bad menu number, a bad email, or a bad role |
-| `InvalidProjectDataException` | A budget that is not greater than 0, or a team size or duration that is not greater than 0 |
+| `InvalidInputException` | Empty text, a bad menu number, a bad email, a bad role, a budget that is not greater than 0, or a team size or duration that is not greater than 0 |
 | `ProjectNotFoundException` | The typed project id is not in the catalog |
 | `TaskNotFoundException` | The typed task id is not on that project |
 | `EmptyProjectException` | Someone asks for a completion result on a project that has zero tasks |
@@ -92,7 +91,7 @@ Create `test/` with three classes:
 
 - `ProjectTests`: no tasks is the empty case, one completed task out of two is `50.0`, and all tasks completed is `100.0`.
 - `TaskTests`: `updateStatus` changes Pending to Completed, and a missing id throws `TaskNotFoundException`.
-- `ValidationTests`: a budget of `0` or below throws `InvalidProjectDataException`.
+- `ValidationTests`: a budget of `0` or below throws `InvalidInputException`.
 
 Use `@Test` and `@BeforeEach`. Assert with `assertEquals` and `assertThrows`. Build each project with the real constructor, then call `calculateCompletionPercentage()`.
 
@@ -135,6 +134,6 @@ Do that before the merge. Do not rebase after the branch has been pushed for som
 ## Phase order
 
 1. Phase 1 — structure only. Done in the source.
-2. Phase 2 — exceptions, and a menu that catches them.
+2. Phase 2 — exceptions, and a menu that catches them. Done on branch `feature/exceptions`.
 3. Phase 3 — at least three passing JUnit tests.
 4. Phase 4 — branch, commit, merge, push, and a short Git section in the README.

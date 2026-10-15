@@ -2,10 +2,29 @@ package services;
 
 import models.Project;
 import models.StatusReport;
+import models.TaskStatus;
 
 import java.util.Locale;
 
 public class ReportService {
+
+    private final TaskService taskService;
+
+    public ReportService(TaskService taskService) {
+        this.taskService = taskService;
+    }
+
+    private StatusReport makeReport(Project project) {
+        return new StatusReport(
+                project.getId(),
+                project.getName(),
+                taskService.countByStatus(project, TaskStatus.COMPLETED),
+                taskService.countByStatus(project, TaskStatus.PENDING),
+                taskService.countByStatus(project, TaskStatus.IN_PROGRESS),
+                project.getTaskCount(),
+                taskService.calculateCompletionPercentage(project),
+                project.isCompleted());
+    }
 
     public void printReport(ProjectService projectService) {
         int count = projectService.getCount();
@@ -22,8 +41,10 @@ public class ReportService {
         System.out.println("──────────────────────────────────────────────────────────────────────────────────────────────");
 
         for (int i = 0; i < count; i++) {
-            StatusReport report = new StatusReport(projectService.getAt(i));
-            report.printRow();
+            StatusReport report = makeReport(projectService.getAt(i));
+            System.out.printf(Locale.US, "%-10s | %-20s | %5d | %9d | %8.2f%%%n",
+                    report.getProjectId(), report.getProjectName(), report.getTotalTasks(),
+                    report.getCompletedTasks(), report.getCompletionPercent());
             percentages[i] = report.getCompletionPercent();
         }
 
@@ -35,8 +56,19 @@ public class ReportService {
     }
 
     public void printReport(Project project) {
-        StatusReport report = new StatusReport(project);
-        report.print();
+        StatusReport report = makeReport(project);
+        System.out.println("Project ID: " + report.getProjectId());
+        System.out.println("Name: " + report.getProjectName());
+        System.out.println("Total tasks: " + report.getTotalTasks());
+        System.out.println("Completed tasks: " + report.getCompletedTasks());
+        System.out.println("Pending tasks: " + report.getPendingTasks());
+        System.out.println("In progress tasks: " + report.getInProgressTasks());
+        System.out.printf(Locale.US, "Completion %%: %.2f%%%n", report.getCompletionPercent());
+        if (report.getTotalTasks() == 0) {
+            System.out.println("This project has no tasks.");
+        } else if (report.isComplete()) {
+            System.out.println("This project is complete.");
+        }
     }
 
     public double calculateAverageCompletion(ProjectService projectService) {
@@ -46,7 +78,7 @@ public class ReportService {
         }
         double[] percentages = new double[count];
         for (int i = 0; i < count; i++) {
-            percentages[i] = projectService.getAt(i).calculateCompletionPercentage();
+            percentages[i] = taskService.calculateCompletionPercentage(projectService.getAt(i));
         }
         return averageOf(percentages);
     }

@@ -7,11 +7,6 @@ public class AdminUser extends User {
     }
 
     @Override
-    public void printUserReport() {
-        System.out.println(getId() + " | " + getName() + " | Admin | Can update and delete: Yes");
-    }
-
-    @Override
     public boolean canUpdateAndDelete() {
         return true;
     }
