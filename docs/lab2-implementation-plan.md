@@ -61,8 +61,7 @@ Add these classes under `src/utils/exceptions/`. Each one extends `Exception`, s
 
 | Class | When to throw it |
 | --- | --- |
-| `InvalidInputException` | Empty text, a bad menu number, a bad email, or a bad role |
-| `InvalidProjectDataException` | A budget that is not greater than 0, or a team size or duration that is not greater than 0 |
+| `InvalidInputException` | Empty text, a bad menu number, a bad email, a bad role, a budget that is not greater than 0, or a team size or duration that is not greater than 0 |
 | `ProjectNotFoundException` | The typed project id is not in the catalog |
 | `TaskNotFoundException` | The typed task id is not on that project |
 | `EmptyProjectException` | Someone asks for a completion result on a project that has zero tasks |
@@ -92,7 +91,7 @@ Create `test/` with three classes:
 
 - `ProjectTests`: no tasks is the empty case, one completed task out of two is `50.0`, and all tasks completed is `100.0`.
 - `TaskTests`: `updateStatus` changes Pending to Completed, and a missing id throws `TaskNotFoundException`.
-- `ValidationTests`: a budget of `0` or below throws `InvalidProjectDataException`.
+- `ValidationTests`: a budget of `0` or below throws `InvalidInputException`.
 
 Use `@Test` and `@BeforeEach`. Assert with `assertEquals` and `assertThrows`. Build each project with the real constructor, then call `calculateCompletionPercentage()`.
 

@@ -14,7 +14,6 @@ import services.TaskService;
 import services.UserService;
 import utils.exceptions.EmptyProjectException;
 import utils.exceptions.InvalidInputException;
-import utils.exceptions.InvalidProjectDataException;
 import utils.exceptions.ProjectNotFoundException;
 import utils.exceptions.TaskNotFoundException;
 
@@ -164,12 +163,12 @@ public class ConsoleMenu {
                 double min = readBudget("Enter minimum budget: ");
                 double max = readBudget("Enter maximum budget: ");
                 if (max < min) {
-                    throw new InvalidProjectDataException(
+                    throw new InvalidInputException(
                             "Maximum budget must be greater than or equal to minimum budget.");
                 }
                 projectService.printByBudget(min, max);
                 return true;
-            } catch (InvalidProjectDataException ex) {
+            } catch (InvalidInputException ex) {
                 printError(ex);
                 System.out.println("Please try again.");
             } finally {
@@ -602,9 +601,6 @@ public class ConsoleMenu {
             } catch (InvalidInputException ex) {
                 printError(ex);
                 System.out.println("Please try again.");
-            } catch (InvalidProjectDataException ex) {
-                printError(ex);
-                System.out.println("Please try again.");
             } finally {
             }
         }
@@ -615,9 +611,6 @@ public class ConsoleMenu {
             try {
                 return ValidationUtils.readPositiveInt(scanner, prompt, message);
             } catch (InvalidInputException ex) {
-                printError(ex);
-                System.out.println("Please try again.");
-            } catch (InvalidProjectDataException ex) {
                 printError(ex);
                 System.out.println("Please try again.");
             } finally {

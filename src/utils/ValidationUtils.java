@@ -2,7 +2,6 @@ package utils;
 
 import models.TaskStatus;
 import utils.exceptions.InvalidInputException;
-import utils.exceptions.InvalidProjectDataException;
 
 import java.util.Scanner;
 
@@ -27,13 +26,13 @@ public class ValidationUtils {
     }
 
     public static int readPositiveInt(Scanner scanner, String prompt, String message)
-            throws InvalidInputException, InvalidProjectDataException {
+            throws InvalidInputException {
         System.out.print(prompt);
         String text = scanner.nextLine().trim();
         try {
             int value = Integer.parseInt(text);
             if (value <= 0) {
-                throw new InvalidProjectDataException(message);
+                throw new InvalidInputException(message);
             }
             return value;
         } catch (NumberFormatException ex) {
@@ -41,14 +40,13 @@ public class ValidationUtils {
         }
     }
 
-    public static double readBudget(Scanner scanner, String prompt)
-            throws InvalidInputException, InvalidProjectDataException {
+    public static double readBudget(Scanner scanner, String prompt) throws InvalidInputException {
         System.out.print(prompt);
         String text = scanner.nextLine().trim();
         try {
             double value = Double.parseDouble(text);
             if (value <= 0) {
-                throw new InvalidProjectDataException("Budget must be greater than 0.");
+                throw new InvalidInputException("Budget must be greater than 0.");
             }
             return value;
         } catch (NumberFormatException ex) {
