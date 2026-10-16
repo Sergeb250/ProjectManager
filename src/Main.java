@@ -7,8 +7,10 @@ import utils.SampleDataLoader;
 
 import java.util.NoSuchElementException;
 
+// Application entry point for the Task Manager console app.
 public class Main {
 
+    // Starts services, loads sample data, then opens the console menu.
     public static void main(String[] args) {
         ProjectService projectService = new ProjectService();
         TaskService taskService = new TaskService(projectService);

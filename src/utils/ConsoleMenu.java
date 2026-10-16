@@ -561,7 +561,6 @@ public class ConsoleMenu {
             } catch (InvalidInputException ex) {
                 printError(ex);
                 System.out.println("Please try again.");
-            } finally {
             }
         }
     }
@@ -639,7 +638,7 @@ public class ConsoleMenu {
     }
 
     private void printError(Exception ex) {
-        System.out.println("❌ Error: " + ex.getClass().getSimpleName() + " – " + ex.getMessage());
+        System.out.println(" Error: " + ex.getClass().getSimpleName() + " – " + ex.getMessage());
     }
 
     private void printBanner(String title) {

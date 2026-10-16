@@ -1,6 +1,8 @@
 # Java Project Management System
 
-This is a console program for software and hardware projects and their tasks. All data sits in arrays in memory. There is no database and no extra libraries. When you exit, the data is gone.
+This is a console program for software and hardware projects and their tasks. All data sits in arrays in memory. There is no database. When you exit, the data is gone.
+
+The app itself uses only the JDK. Maven brings in **JUnit 5** and **Mockito** for tests.
 
 ## Setup and how to run
 
@@ -8,11 +10,12 @@ You need:
 
 - JDK 21
 - IntelliJ IDEA Community Edition
+- Apache Maven (to run tests), or use IntelliJ’s Maven tool window
 
 ### Run it in IntelliJ
 
 1. Install JDK 21.
-2. In IntelliJ, choose File → Open and open this folder.
+2. In IntelliJ, choose File → Open and open this folder (it will pick up `pom.xml`).
 3. If IntelliJ asks for a Project SDK, pick JDK 21.
 4. Open `src/Main.java`.
 5. Click the green Run button next to `main`.
@@ -21,12 +24,29 @@ The screen uses UTF-8, so the box borders and the check marks show correctly in 
 
 ### Run it from PowerShell
 
-Open a terminal in this folder, then run:
+Open a terminal in this folder, then run (skip `src/test` so JUnit imports are not required):
 
 ```text
-javac --release 21 -encoding UTF-8 -d out (Get-ChildItem -Recurse src -Filter *.java).FullName
+javac --release 21 -encoding UTF-8 -d out (Get-ChildItem -Recurse src -Filter *.java | Where-Object { $_.FullName -notmatch '\\test\\' }).FullName
 java -cp out Main
 ```
+
+Or with Maven:
+
+```text
+mvn -q compile
+java -cp target/classes Main
+```
+
+### Run the tests
+
+From this folder:
+
+```text
+mvn test
+```
+
+In IntelliJ, open `src/test/java/ProjectTests.java` and run the class, or use the Maven `test` lifecycle.
 
 ## Who is logged in
 
@@ -117,7 +137,7 @@ Each subclass overrides two methods:
 
 The catalog stores both kinds in one `Project[]`. When it prints a project, Java runs the subclass method. That is polymorphism. The menu never checks the class with `instanceof`.
 
-`User` is abstract for the same reason. `AdminUser` and `RegularUser` override `printUserReport()` and `canUpdateAndDelete()`. Update, remove, and create-user ask `canUpdateAndDelete()` first. An admin returns true. A regular user returns false.
+`User` is abstract for the same reason. `AdminUser` and `RegularUser` override `printUserReport()` and `canUpdateAndDelete()`. Update, remove, and create-user ask `canUpdateAndDelete()` first. An `AdminUser` returns `true`. A `RegularUser` returns `false`.
 
 `Task` implements `Completable`. The completion count calls `isCompleted()` instead of comparing a status word in the menu. `Project` implements the same interface. A project is complete only when it has tasks and every task is completed. Status values are only `Pending`, `In Progress`, and `Completed`.
 
@@ -127,18 +147,49 @@ Projects, tasks, and users are stored in arrays, with a count of how many slots 
 
 There is no password, no saving to disk, and no `ArrayList`.
 
+## Exceptions
+
+Bad input and missing ids throw checked exceptions under `src/utils/exceptions/`. `ValidationUtils` throws. `ConsoleMenu` catches, prints the error, and stays in the menu.
+
+| Exception | Typical cause |
+| --- | --- |
+| `InvalidInputException` | Empty text, bad number, bad email, budget or team size ≤ 0 |
+| `ProjectNotFoundException` | Project id not in the catalog |
+| `TaskNotFoundException` | Task id not found |
+| `EmptyProjectException` | Completion asked for a project with zero tasks |
+
+## Tests
+
+Tests live in `src/test/java/` and run with Maven Surefire (`mvn test`).
+
+`ProjectTests` covers:
+
+| Test | What it checks |
+| --- | --- |
+| `createProject` | A real `SoftwareProject` can be stored in a real `ProjectService` |
+| `addTask` | `TaskService` adds a task onto a project you pass in |
+| `calculateCompletion` | One completed task out of two is `50.0%` |
+| `missingTaskThrows` | `findRequired` throws `TaskNotFoundException` when no projects exist |
+| `adminCanDeleteProject` | `AdminUser.canUpdateAndDelete()` is `true` |
+| `regularUserCannotDeleteProject` | `RegularUser.canUpdateAndDelete()` is `false` |
+
+Mockito is used only where `TaskService` must look up projects through `ProjectService` (for example `missingTaskThrows` stubs `getCount()`). Methods such as `addTask` take a `Project` argument and do not call the mock.
+
 ## Project layout
 
 ```text
+pom.xml
 src/
   Main.java
   models/       Project, SoftwareProject, HardwareProject, Task, TaskStatus, User, RegularUser, AdminUser, StatusReport
   interfaces/   Completable
   services/     ProjectService, TaskService, ReportService, UserService
   utils/        ConsoleMenu, ValidationUtils, SampleDataLoader
+  utils/exceptions/  InvalidInputException, ProjectNotFoundException, TaskNotFoundException, EmptyProjectException
+  test/java/    ProjectTests (JUnit 5 + Mockito)
 docs/
   class-diagram.png
-  design-decisions.md
+  designDecisions.md
   lab2-implementation-plan.md
 ```
 

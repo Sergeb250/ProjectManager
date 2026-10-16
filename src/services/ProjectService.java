@@ -4,6 +4,7 @@ import models.Project;
 
 import java.util.Locale;
 
+// Stores and displays the list of projects.
 public class ProjectService {
 
     private static final int MAX_PROJECTS = 20;
@@ -16,10 +17,12 @@ public class ProjectService {
         projectCount = 0;
     }
 
+    // True when the project array has reached its capacity.
     public boolean isFull() {
         return projectCount >= MAX_PROJECTS;
     }
 
+    // Adds a project to the next free slot.
     public void addProject(Project project) {
         projects[projectCount] = project;
         projectCount++;
@@ -33,6 +36,7 @@ public class ProjectService {
         return projects[index];
     }
 
+    // Finds a project by ID, or returns null if it does not exist.
     public Project findById(String projectId) {
         for (int i = 0; i < projectCount; i++) {
             if (projects[i].getId().equalsIgnoreCase(projectId)) {
@@ -42,6 +46,7 @@ public class ProjectService {
         return null;
     }
 
+    // Prints every project sorted by name.
     public void printAll() {
         Project[] copy = new Project[projectCount];
         for (int i = 0; i < projectCount; i++) {
@@ -52,6 +57,7 @@ public class ProjectService {
         System.out.println("Total projects: " + projectCount);
     }
 
+    // Prints projects that match the given type.
     public void printByType(String type) {
         int matches = 0;
         for (int i = 0; i < projectCount; i++) {
@@ -75,6 +81,7 @@ public class ProjectService {
         printTable(result);
     }
 
+    // Prints projects whose budget is between min and max.
     public void printByBudget(double min, double max) {
         int matches = 0;
         for (int i = 0; i < projectCount; i++) {
@@ -99,6 +106,7 @@ public class ProjectService {
         printTable(result);
     }
 
+    // Prints a formatted table of the given projects.
     private void printTable(Project[] matches) {
         System.out.println("──────────────────────────────────────────────────────────────────────────────────────────────");
         System.out.printf("%-8s | %-20s | %-10s | %-9s | %s%n",
@@ -113,10 +121,12 @@ public class ProjectService {
         }
     }
 
+    // True when the project budget is inside the given range.
     private boolean inBudget(Project project, double min, double max) {
         return project.getBudget() >= min && project.getBudget() <= max;
     }
 
+    // Sorts projects alphabetically by name (case insensitive).
     private void sortByName(Project[] list) {
         for (int pass = 0; pass < list.length - 1; pass++) {
             for (int i = 0; i < list.length - 1 - pass; i++) {

@@ -2,6 +2,7 @@ package models;
 
 import interfaces.Completable;
 
+// Base class for all projects; holds shared fields and the task list.
 public abstract class Project implements Completable {
 
     public static final int MAX_TASKS = 20;
@@ -19,6 +20,7 @@ public abstract class Project implements Completable {
     private final Task[] tasks;
     private int taskCount;
 
+    // Creates a project and assigns the next PRJ ID.
     public Project(String name, String description, int teamSize, int duration, double budget, String leadName) {
         this.id = String.format("PRJ%03d", nextNumber);
         nextNumber++;
@@ -32,11 +34,13 @@ public abstract class Project implements Completable {
         this.taskCount = 0;
     }
 
+    // Returns the project type label (e.g. Software or Hardware).
     public abstract String getType();
 
+    // Returns type-specific details for display.
     public abstract String getProjectDetails();
 
-    // True only when every stored task is completed. A project with no tasks is not completed.
+    // True only when every stored task is completed; empty projects are not completed.
     @Override
     public boolean isCompleted() {
         if (taskCount == 0) {
@@ -50,17 +54,16 @@ public abstract class Project implements Completable {
         return true;
     }
 
-    // The task array stays private. TaskService uses this to read one slot.
+    // Reads one task slot; used by TaskService.
     public Task readTask(int index) {
         return tasks[index];
     }
 
-    // TaskService uses this to store a task, or to clear a slot with null when a task is removed.
+    // Writes or clears one task slot; used by TaskService.
     public void writeTask(int index, Task task) {
         tasks[index] = task;
     }
 
-    // TaskService updates the count after it adds or removes a task.
     public void setTaskCount(int taskCount) {
         this.taskCount = taskCount;
     }
@@ -96,6 +99,4 @@ public abstract class Project implements Completable {
     public int getTaskCount() {
         return taskCount;
     }
-
-
 }

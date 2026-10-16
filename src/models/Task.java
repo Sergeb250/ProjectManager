@@ -2,6 +2,7 @@ package models;
 
 import interfaces.Completable;
 
+// Represents one task assigned inside a project.
 public class Task implements Completable {
 
     private static int nextNumber = 1;
@@ -12,6 +13,7 @@ public class Task implements Completable {
     private final int hours;
     private TaskStatus status;
 
+    // Creates a task and assigns the next TSK ID.
     public Task(String name, String assignedTo, TaskStatus status, int hours) {
         this.id = String.format("TSK%03d", nextNumber);
         nextNumber++;
@@ -21,6 +23,7 @@ public class Task implements Completable {
         this.hours = hours;
     }
 
+    // True when the task status is COMPLETED.
     @Override
     public boolean isCompleted() {
         return status == TaskStatus.COMPLETED;
