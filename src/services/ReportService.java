@@ -6,6 +6,7 @@ import models.TaskStatus;
 
 import java.util.Locale;
 
+// Builds and prints project completion reports.
 public class ReportService {
 
     private final TaskService taskService;
@@ -14,6 +15,7 @@ public class ReportService {
         this.taskService = taskService;
     }
 
+    // Builds a status snapshot for one project.
     private StatusReport makeReport(Project project) {
         return new StatusReport(
                 project.getId(),
@@ -26,6 +28,7 @@ public class ReportService {
                 project.isCompleted());
     }
 
+    // Prints a completion summary table for all projects.
     public void printReport(ProjectService projectService) {
         int count = projectService.getCount();
         if (count == 0) {
@@ -55,6 +58,7 @@ public class ReportService {
         System.out.println("──────────────────────────────────────────────────────────────────────────────────────────────");
     }
 
+    // Prints a detailed status report for one project.
     public void printReport(Project project) {
         StatusReport report = makeReport(project);
         System.out.println("Project ID: " + report.getProjectId());
@@ -71,6 +75,7 @@ public class ReportService {
         }
     }
 
+    // Returns the average completion percentage across all projects.
     public double calculateAverageCompletion(ProjectService projectService) {
         int count = projectService.getCount();
         if (count == 0) {
@@ -83,6 +88,7 @@ public class ReportService {
         return averageOf(percentages);
     }
 
+    // Calculates the average of the given percentage values.
     private double averageOf(double[] percentages) {
         double sum = 0;
         for (int i = 0; i < percentages.length; i++) {

@@ -2,6 +2,7 @@ package services;
 
 import models.User;
 
+// Stores users and tracks the currently logged-in user.
 public class UserService {
 
     public static final int MAX_USERS = 10;
@@ -15,10 +16,12 @@ public class UserService {
         userCount = 0;
     }
 
+    // True when the user array has reached its capacity.
     public boolean isFull() {
         return userCount >= MAX_USERS;
     }
 
+    // Adds a user to the next free slot.
     public void addUser(User user) {
         users[userCount] = user;
         userCount++;
@@ -40,6 +43,7 @@ public class UserService {
         this.currentUser = user;
     }
 
+    // True when another user already has the same email.
     public boolean emailExists(String email) {
         for (int i = 0; i < userCount; i++) {
             if (users[i].getEmail().equalsIgnoreCase(email)) {
