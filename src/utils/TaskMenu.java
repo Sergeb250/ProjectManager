@@ -3,6 +3,7 @@ package utils;
 import models.Project;
 import models.Task;
 import models.TaskStatus;
+import services.ConcurrencyService;
 import services.ProjectService;
 import services.TaskService;
 import services.UserService;
@@ -56,6 +57,11 @@ class TaskMenu extends MenuScreen {
                     break;
             }
         }
+    }
+
+    void simulateUpdates() {
+        printBanner("PARALLEL TASK UPDATE SIMULATION");
+        new ConcurrencyService(taskService).simulate(projectService);
     }
 
     void addToProject(Project project) {

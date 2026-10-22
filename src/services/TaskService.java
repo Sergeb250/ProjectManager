@@ -33,7 +33,7 @@ public class TaskService {
         return false;
     }
 
-    public boolean addTask(Project project, Task task) {
+    public synchronized boolean addTask(Project project, Task task) {
         project.getTasks().add(task);
         return true;
     }
@@ -57,7 +57,7 @@ public class TaskService {
         return project.getTasks().get(index);
     }
 
-    public Task removeTaskById(Project project, String taskId) {
+    public synchronized Task removeTaskById(Project project, String taskId) {
         Task removed = findTaskById(project, taskId);
         if (removed == null) {
             return null;
@@ -84,7 +84,7 @@ public class TaskService {
         return task;
     }
 
-    public Task addTask(Project project, String name, String assignedTo, TaskStatus status, int hours) {
+    public synchronized Task addTask(Project project, String name, String assignedTo, TaskStatus status, int hours) {
         if (hasTaskName(project, name)) {
             return null;
         }
@@ -93,7 +93,7 @@ public class TaskService {
         return task;
     }
 
-    public void updateStatus(Task task, TaskStatus status) {
+    public synchronized void updateStatus(Task task, TaskStatus status) {
         task.setStatus(status);
     }
 

@@ -304,15 +304,19 @@ project-management-system/
 │   │
 │   ├── utils/
 │   │   ├── ConsoleMenu.java
+│   │   ├── ProjectMenu.java
+│   │   ├── TaskMenu.java
+│   │   ├── UserMenu.java
+│   │   ├── ReportMenu.java
 │   │   ├── ValidationUtils.java
 │   │   └── exceptions/
 │   │       ├── InvalidInputException.java
 │   │       ├── ProjectNotFoundException.java
 │   │       ├── TaskNotFoundException.java
 │   │       └── EmptyProjectException.java
-│   │
-│   └── test/java/
-│       └── ProjectTests.java
+│
+├── test/
+│   └── ProjectTests.java
 │
 ├── docs/
 │   ├── class-diagram.png
@@ -563,7 +567,7 @@ Please try again.
 
 **Steps**
 
-1. Open `src/test/java/ProjectTests.java` or run `mvn test`.
+1. Open `test/ProjectTests.java` or run `mvn test`.
 2. Run the class (JUnit 5 + Mockito).
 
 **Result — Done**
@@ -601,8 +605,11 @@ $ mvn test
 | `feature/exceptions` | Phase 2 — custom exceptions + menu try/catch |
 | `feature/testing` | Phase 3 — JUnit tests |
 | `feature/taskvalidation` | Follow-up — Maven `src/test`, Mockito, README |
+| `feature/collections-fp` | Week 3 — lists, map, streams, regex, and smaller menus |
+| `feature/file-io` | Week 3 — save and load `projects_data.json` |
+| `feature/concurrency` | Week 3 — three threads update tasks safely |
 
-Merged into `main`: `feature/refactor`, `feature/exceptions`, `feature/testing`, `feature/taskvalidation`.
+Merged into `main`: `feature/refactor`, `feature/exceptions`, `feature/testing`, `feature/taskvalidation`, `feature/collections-fp`, `feature/file-io`, `feature/concurrency`.
 
 **Example commit history**
 
@@ -648,7 +655,26 @@ java -cp target/classes Main
 
 **Result — Done**
 
-- `Main` only builds services and starts the menu (no business logic).
-- Models keep fields private; services own arrays and operations; utils own I/O and validation.
+- `Main` loads `data/projects_data.json`, starts the menu, and saves the file on exit.
+- Models keep fields private. Projects sit in a `HashMap`. Tasks sit in an `ArrayList`.
 - Short class/method comments describe intent (for example on `Project`, `TaskService`, exception types).
-- No `ArrayList`; unused Lab 1 guide files were removed; test sources live under Maven `src/test/java`.
+- Test sources live under Maven `test/`.
+
+## Week 3
+
+Projects are stored in a `HashMap`. Each project keeps its tasks in an `ArrayList`. Filtering and completion use streams, lambdas, and method references (`StreamService`, `Project.getCompletionRate()`).
+
+IDs are checked with `Pattern` and `Matcher` in `RegexValidator` (`PRJ###`, `TSK###`).
+
+On startup the app reads `data/projects_data.json`. On exit it writes that file again. A missing or broken file prints an error and starts with an empty catalog.
+
+Main menu option **5** runs three threads that update tasks. `TaskService.updateStatus` is `synchronized`.
+
+Run the app from the project folder so `data/projects_data.json` is found. Tests:
+
+```text
+test/ProjectTests.java
+test/StreamOperationsTest.java
+test/FilePersistenceTest.java
+test/ConcurrencyTest.java
+```

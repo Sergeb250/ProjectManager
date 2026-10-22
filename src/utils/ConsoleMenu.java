@@ -40,9 +40,10 @@ public class ConsoleMenu extends MenuScreen {
             System.out.println("2. Manage Tasks");
             System.out.println("3. View Status Reports");
             System.out.println("4. Switch User");
-            System.out.println("5. Exit");
+            System.out.println("5. Simulate Concurrent Updates");
+            System.out.println("6. Exit");
             System.out.println();
-            choice = readChoice("Enter your choice: ", 1, 5);
+            choice = readChoice("Enter your choice: ", 1, 6);
             switch (choice) {
                 case 1:
                     projectMenu.open();
@@ -57,12 +58,15 @@ public class ConsoleMenu extends MenuScreen {
                     userMenu.open();
                     break;
                 case 5:
+                    taskMenu.simulateUpdates();
+                    break;
+                case 6:
                     System.out.println("Goodbye.");
                     break;
                 default:
                     System.out.println("Invalid option.");
                     break;
             }
-        } while (choice != 5);
+        } while (choice != 6);
     }
 }
