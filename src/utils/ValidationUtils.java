@@ -4,6 +4,8 @@ import models.TaskStatus;
 import utils.exceptions.InvalidInputException;
 
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ValidationUtils {
 
@@ -75,9 +77,7 @@ public class ValidationUtils {
 
     public static String readEmail(Scanner scanner, String prompt) throws InvalidInputException {
         String email = readText(scanner, prompt);
-        int at = email.indexOf('@');
-        int dot = email.lastIndexOf('.');
-        if (at > 0 && dot > at + 1 && dot < email.length() - 1) {
+        if (RegexValidator.isEmail(email)) {
             return email;
         }
         throw new InvalidInputException("Please enter a valid email address.");
@@ -92,26 +92,36 @@ public class ValidationUtils {
         }
         String normalized = normalizeId(text, prefix);
         if (normalized == null) {
-            throw new InvalidInputException("Invalid input. Please enter a valid numeric or prefixed ID (e.g., "
+            throw new InvalidInputException("Invalid ID format. Use pattern " + prefix + "### (e.g., "
                     + prefix + "001).");
         }
         return normalized;
     }
 
     private static String normalizeId(String text, String prefix) {
-        if (text.matches("(?i)" + prefix + "\\d{3,}")) {
-            return prefix + text.substring(prefix.length()).toUpperCase(java.util.Locale.US);
-        }
-        if (text.matches("\\d+")) {
+        Pattern prefixed = Pattern.compile("(?i)" + Pattern.quote(prefix) + "\\d{3}");
+        Matcher matcher = prefixed.matcher(text);
+        String candidate = null;
+        if (matcher.matches()) {
+            candidate = prefix + text.substring(prefix.length()).toUpperCase(java.util.Locale.US);
+        } else if (text.matches("\\d{1,3}")) {
             try {
                 int number = Integer.parseInt(text);
-                if (number <= 0) {
-                    return null;
+                if (number > 0) {
+                    candidate = String.format("%s%03d", prefix, number);
                 }
-                return String.format("%s%03d", prefix, number);
             } catch (NumberFormatException ex) {
                 return null;
             }
+        }
+        if (candidate == null) {
+            return null;
+        }
+        if (prefix.equals("PRJ") && RegexValidator.isProjectId(candidate)) {
+            return candidate;
+        }
+        if (prefix.equals("TSK") && RegexValidator.isTaskId(candidate)) {
+            return candidate;
         }
         return null;
     }

@@ -2,10 +2,11 @@ package models;
 
 import interfaces.Completable;
 
-// Base class for all projects; holds shared fields and the task list.
-public abstract class Project implements Completable {
+import java.util.ArrayList;
+import java.util.List;
 
-    public static final int MAX_TASKS = 20;
+// Base class for all projects. Tasks live in an ArrayList, so the list can grow.
+public abstract class Project implements Completable {
 
     private static int nextNumber = 1;
 
@@ -16,56 +17,51 @@ public abstract class Project implements Completable {
     private final int duration;
     private final double budget;
     private final String leadName;
-
-    private final Task[] tasks;
-    private int taskCount;
+    private final List<Task> tasks;
 
     // Creates a project and assigns the next PRJ ID.
     public Project(String name, String description, int teamSize, int duration, double budget, String leadName) {
-        this.id = String.format("PRJ%03d", nextNumber);
-        nextNumber++;
+        this(nextProjectId(), name, description, teamSize, duration, budget, leadName);
+    }
+
+    // Used when a project is loaded from the file and already has an ID.
+    public Project(String id, String name, String description, int teamSize, int duration,
+                   double budget, String leadName) {
+        this.id = id;
+        rememberNumber(id);
         this.name = name;
         this.description = description;
         this.teamSize = teamSize;
         this.duration = duration;
         this.budget = budget;
         this.leadName = leadName;
-        this.tasks = new Task[MAX_TASKS];
-        this.taskCount = 0;
+        this.tasks = new ArrayList<>();
     }
 
-    // Returns the project type label (e.g. Software or Hardware).
     public abstract String getType();
 
-    // Returns type-specific details for display.
     public abstract String getProjectDetails();
 
-    // True only when every stored task is completed; empty projects are not completed.
+    // Empty projects are not completed. Every task must be completed.
     @Override
     public boolean isCompleted() {
-        if (taskCount == 0) {
+        if (tasks.isEmpty()) {
             return false;
         }
-        for (int i = 0; i < taskCount; i++) {
-            if (!tasks[i].isCompleted()) {
-                return false;
-            }
+        return tasks.stream().allMatch(Task::isCompleted);
+    }
+
+    // Completed tasks divided by all tasks, as a percent. Zero when there are no tasks.
+    public double getCompletionRate() {
+        if (tasks.isEmpty()) {
+            return 0.0;
         }
-        return true;
+        long completed = tasks.stream().filter(Task::isCompleted).count();
+        return (completed * 100.0) / tasks.size();
     }
 
-    // Reads one task slot; used by TaskService.
-    public Task readTask(int index) {
-        return tasks[index];
-    }
-
-    // Writes or clears one task slot; used by TaskService.
-    public void writeTask(int index, Task task) {
-        tasks[index] = task;
-    }
-
-    public void setTaskCount(int taskCount) {
-        this.taskCount = taskCount;
+    public List<Task> getTasks() {
+        return tasks;
     }
 
     public String getId() {
@@ -97,6 +93,23 @@ public abstract class Project implements Completable {
     }
 
     public int getTaskCount() {
-        return taskCount;
+        return tasks.size();
+    }
+
+    private static String nextProjectId() {
+        String id = String.format("PRJ%03d", nextNumber);
+        nextNumber++;
+        return id;
+    }
+
+    private static void rememberNumber(String id) {
+        String digits = id.replaceAll("\\D", "");
+        if (digits.isEmpty()) {
+            return;
+        }
+        int number = Integer.parseInt(digits);
+        if (number >= nextNumber) {
+            nextNumber = number + 1;
+        }
     }
 }

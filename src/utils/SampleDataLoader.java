@@ -15,10 +15,17 @@ public final class SampleDataLoader {
     }
 
     public static void load(ProjectService projectService, TaskService taskService, UserService userService) {
+        loadUsers(userService);
+        loadSampleProjects(projectService, taskService);
+    }
+
+    public static void loadUsers(UserService userService) {
         userService.addUser(new AdminUser("eric mugisha", "eric.mugisha@amalitech.com"));
         userService.addUser(new RegularUser("shima elyse", "shima.elsyse@gmail.com"));
         userService.setCurrentUser(userService.getAt(0));
+    }
 
+    public static void loadSampleProjects(ProjectService projectService, TaskService taskService) {
         SoftwareProject alpha = new SoftwareProject(
                 "Alpha Tracker", "Task tracking app for startups", 5, 90, 15000, "Alice Johnson", "Java");
         HardwareProject iot = new HardwareProject(
