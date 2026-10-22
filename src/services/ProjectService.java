@@ -2,140 +2,113 @@ package services;
 
 import models.Project;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
-// Stores and displays the list of projects.
+// Stores projects in a HashMap so lookup by ID does not need a fixed array size.
 public class ProjectService {
 
-    private static final int MAX_PROJECTS = 20;
-
-    private final Project[] projects;
-    private int projectCount;
+    private final Map<String, Project> projects;
 
     public ProjectService() {
-        projects = new Project[MAX_PROJECTS];
-        projectCount = 0;
+        projects = new HashMap<>();
     }
 
-    // True when the project array has reached its capacity.
+    // A HashMap grows as needed, so the catalog is never full.
     public boolean isFull() {
-        return projectCount >= MAX_PROJECTS;
+        return false;
     }
 
-    // Adds a project to the next free slot.
     public void addProject(Project project) {
-        projects[projectCount] = project;
-        projectCount++;
+        projects.put(project.getId(), project);
     }
 
     public int getCount() {
-        return projectCount;
+        return projects.size();
+    }
+
+    public List<Project> getProjects() {
+        return new ArrayList<>(projects.values());
     }
 
     public Project getAt(int index) {
-        return projects[index];
+        return getProjects().get(index);
     }
 
-    // Finds a project by ID, or returns null if it does not exist.
     public Project findById(String projectId) {
-        for (int i = 0; i < projectCount; i++) {
-            if (projects[i].getId().equalsIgnoreCase(projectId)) {
-                return projects[i];
-            }
-        }
-        return null;
+        return projects.values().stream()
+                .filter(project -> project.getId().equalsIgnoreCase(projectId))
+                .findFirst()
+                .orElse(null);
     }
 
-    // Prints every project sorted by name.
     public void printAll() {
-        Project[] copy = new Project[projectCount];
-        for (int i = 0; i < projectCount; i++) {
-            copy[i] = projects[i];
-        }
-        sortByName(copy);
-        printTable(copy);
-        System.out.println("Total projects: " + projectCount);
+        List<Project> sorted = sortedByName(getProjects());
+        printTable(sorted);
+        System.out.println("Total projects: " + projects.size());
     }
 
-    // Prints projects that match the given type.
     public void printByType(String type) {
-        int matches = 0;
-        for (int i = 0; i < projectCount; i++) {
-            if (projects[i].getType().equals(type)) {
-                matches++;
-            }
-        }
-        Project[] result = new Project[matches];
-        int index = 0;
-        for (int i = 0; i < projectCount; i++) {
-            if (projects[i].getType().equals(type)) {
-                result[index] = projects[i];
-                index++;
-            }
-        }
-        if (result.length == 0) {
+        List<Project> result = projects.values().stream()
+                .filter(project -> project.getType().equals(type))
+                .sorted(byName())
+                .collect(java.util.stream.Collectors.toList());
+        if (result.isEmpty()) {
             System.out.println("None.");
             return;
         }
-        sortByName(result);
         printTable(result);
     }
 
-    // Prints projects whose budget is between min and max.
     public void printByBudget(double min, double max) {
-        int matches = 0;
-        for (int i = 0; i < projectCount; i++) {
-            if (inBudget(projects[i], min, max)) {
-                matches++;
-            }
-        }
-        Project[] result = new Project[matches];
-        int index = 0;
-        for (int i = 0; i < projectCount; i++) {
-            if (inBudget(projects[i], min, max)) {
-                result[index] = projects[i];
-                index++;
-            }
-        }
-        if (result.length == 0) {
+        List<Project> result = projects.values().stream()
+                .filter(project -> project.getBudget() >= min && project.getBudget() <= max)
+                .sorted(byName())
+                .collect(java.util.stream.Collectors.toList());
+        if (result.isEmpty()) {
             System.out.println("No projects found.");
             return;
         }
-        sortByName(result);
         System.out.printf(Locale.US, "Projects with budget from $%,.2f to $%,.2f:%n", min, max);
         printTable(result);
     }
 
-    // Prints a formatted table of the given projects.
-    private void printTable(Project[] matches) {
+    // Shows projects whose completion is above the given percent.
+    public void printAboveCompletion(double minimum) {
+        List<Project> result = projects.values().stream()
+                .filter(project -> project.getCompletionRate() > minimum)
+                .sorted(byName())
+                .collect(java.util.stream.Collectors.toList());
+        if (result.isEmpty()) {
+            System.out.println("None.");
+            return;
+        }
+        result.forEach(project -> System.out.printf(Locale.US, "%s | %s | %.0f%%%n",
+                project.getId(), project.getName(), project.getCompletionRate()));
+    }
+
+    private List<Project> sortedByName(List<Project> list) {
+        return list.stream().sorted(byName()).collect(java.util.stream.Collectors.toList());
+    }
+
+    private Comparator<Project> byName() {
+        return (first, second) -> first.getName().compareToIgnoreCase(second.getName());
+    }
+
+    private void printTable(List<Project> matches) {
         System.out.println("──────────────────────────────────────────────────────────────────────────────────────────────");
         System.out.printf("%-8s | %-20s | %-10s | %-9s | %s%n",
                 "ID", "PROJECT NAME", "TYPE", "TEAM SIZE", "BUDGET");
         System.out.println("──────────────────────────────────────────────────────────────────────────────────────────────");
-        for (int i = 0; i < matches.length; i++) {
-            Project project = matches[i];
+        for (Project project : matches) {
             System.out.printf(Locale.US, "%-8s | %-20s | %-10s | %-9d | $%,.2f%n",
                     project.getId(), project.getName(), project.getType(), project.getTeamSize(), project.getBudget());
             System.out.println("         | Description: " + project.getDescription());
             System.out.println("──────────────────────────────────────────────────────────────────────────────────────────────");
-        }
-    }
-
-    // True when the project budget is inside the given range.
-    private boolean inBudget(Project project, double min, double max) {
-        return project.getBudget() >= min && project.getBudget() <= max;
-    }
-
-    // Sorts projects alphabetically by name (case insensitive).
-    private void sortByName(Project[] list) {
-        for (int pass = 0; pass < list.length - 1; pass++) {
-            for (int i = 0; i < list.length - 1 - pass; i++) {
-                if (list[i].getName().compareToIgnoreCase(list[i + 1].getName()) > 0) {
-                    Project temp = list[i];
-                    list[i] = list[i + 1];
-                    list[i + 1] = temp;
-                }
-            }
         }
     }
 }
