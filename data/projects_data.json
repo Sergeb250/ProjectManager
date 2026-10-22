@@ -1,0 +1,75 @@
+[
+  {
+    "projectId": "PRJ001",
+    "name": "Alpha Tracker",
+    "type": "Software",
+    "description": "Task tracking app for startups",
+    "teamSize": "5",
+    "duration": "90",
+    "budget": "15000.0",
+    "lead": "Alice Johnson",
+    "extra": "Java",
+    "tasks": [
+      {"id": "TSK001", "name": "Design Database", "assignedTo": "Alice Johnson", "status": "Completed", "hours": "8"},
+      {"id": "TSK002", "name": "Implement API", "assignedTo": "Bob Smith", "status": "In Progress", "hours": "12"},
+      {"id": "TSK003", "name": "Write Unit Tests", "assignedTo": "Bob Smith", "status": "Pending", "hours": "6"}
+    ]
+  },
+  {
+    "projectId": "PRJ002",
+    "name": "IoT Sensor Kit",
+    "type": "Hardware",
+    "description": "Sensor prototype for smart devices",
+    "teamSize": "3",
+    "duration": "60",
+    "budget": "10000.0",
+    "lead": "Bob Smith",
+    "extra": "Sensors",
+    "tasks": [
+      {"id": "TSK004", "name": "Assemble Board", "assignedTo": "Bob Smith", "status": "Completed", "hours": "10"},
+      {"id": "TSK005", "name": "Calibrate Sensor", "assignedTo": "Alice Johnson", "status": "Pending", "hours": "4"}
+    ]
+  },
+  {
+    "projectId": "PRJ003",
+    "name": "Mobile Checkout",
+    "type": "Software",
+    "description": "Phone checkout for retail stores",
+    "teamSize": "4",
+    "duration": "40",
+    "budget": "22000.0",
+    "lead": "Alice Johnson",
+    "extra": "Kotlin",
+    "tasks": [
+      {"id": "TSK006", "name": "Build Cart", "assignedTo": "Alice Johnson", "status": "Completed", "hours": "5"},
+      {"id": "TSK007", "name": "Payment Flow", "assignedTo": "Bob Smith", "status": "Completed", "hours": "7"}
+    ]
+  },
+  {
+    "projectId": "PRJ004",
+    "name": "Warehouse Robot",
+    "type": "Hardware",
+    "description": "Moving shelf robot for a warehouse",
+    "teamSize": "6",
+    "duration": "120",
+    "budget": "48000.0",
+    "lead": "Alice Johnson",
+    "extra": "Motors",
+    "tasks": [
+      {"id": "TSK008", "name": "Frame Build", "assignedTo": "Bob Smith", "status": "Pending", "hours": "20"}
+    ]
+  },
+  {
+    "projectId": "PRJ005",
+    "name": "Payroll Portal",
+    "type": "Software",
+    "description": "Staff pay and leave portal",
+    "teamSize": "2",
+    "duration": "30",
+    "budget": "8000.0",
+    "lead": "Bob Smith",
+    "extra": "Java",
+    "tasks": [
+    ]
+  }
+]
